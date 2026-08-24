@@ -1,0 +1,5 @@
+node_modules/
+dist/
+BuildArtifacts/
+native-host/target/
+.DS_Store

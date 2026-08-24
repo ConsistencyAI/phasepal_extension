@@ -1,0 +1,33 @@
+{
+  "manifest_version": 3,
+  "name": "Phase Pal Music Bridge",
+  "description": "Connect supported browser music to Phase Pal Dance to Music.",
+  "version": "0.1.0",
+  "minimum_chrome_version": "116",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzcHWi3ZEURYdd5+AuagT1acWVNMEWkXp5XOy5oujW/moLrQJk2tfbJIsxxI/hOsBj7e68k0McCjDwPdYPFHHfm88FPS51BrdEpGy81RTKoXlV3x0SBmjy/LbkT5+wibAKIL05Nhod5m4a15Xx6H1IBrOJngHhW8DyAYqxMILRT7YlDdJfBA6fSQiiKi85888GFi9Ca5zZuDGgOf+fVnTDlzfDKvSyv6akED9kmmzd5RaHyO2PubRe/hcED5eZijPc7/YhHS2U0f0EwDi91EhpBu9AiK51W25QZ2GCMM855lL8+D7YN3BYfCO84tKVqQKmVWvG6BvS7uRsyURXdGxMwIDAQAB",
+  "permissions": ["nativeMessaging", "offscreen", "tabCapture", "storage"],
+  "host_permissions": [
+    "https://open.spotify.com/*",
+    "https://music.youtube.com/*",
+    "https://soundcloud.com/*"
+  ],
+  "background": {
+    "service_worker": "assets/background.js",
+    "type": "module"
+  },
+  "action": {
+    "default_title": "Phase Pal Music Bridge",
+    "default_popup": "src/popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://open.spotify.com/*",
+        "https://music.youtube.com/*",
+        "https://soundcloud.com/*"
+      ],
+      "js": ["assets/content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

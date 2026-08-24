@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phase Pal Music Bridge</title>
+    <link rel="stylesheet" href="./popup.css">
+  </head>
+  <body>
+    <main class="shell">
+      <header class="header">
+        <div class="mark" aria-hidden="true"><span></span><span></span><span></span></div>
+        <div>
+          <h1>Dance to Music</h1>
+          <p id="provider">Phase Pal browser bridge</p>
+        </div>
+      </header>
+
+      <section class="status-card" aria-live="polite">
+        <div class="status-row">
+          <span id="status-dot" class="status-dot"></span>
+          <div>
+            <strong id="status-title">Checking connection</strong>
+            <p id="status-detail">One moment.</p>
+          </div>
+        </div>
+        <div id="metrics" class="metrics" hidden>
+          <div><span class="metric-value" id="bpm">—</span><span class="metric-label">BPM</span></div>
+          <div><span class="metric-value" id="confidence">—</span><span class="metric-label">Beat lock</span></div>
+        </div>
+      </section>
+
+      <button id="capture-button" class="primary-button" type="button" disabled>
+        <span class="button-icon" aria-hidden="true">
+          <svg class="icon-play" viewBox="0 0 24 24"><path d="M8 5.5v13l10-6.5z"/></svg>
+          <svg class="icon-stop" viewBox="0 0 24 24"><rect x="6.5" y="6.5" width="11" height="11" rx="2"/></svg>
+        </span>
+        <span id="button-label">Enable Beat Sync</span>
+      </button>
+
+      <p class="privacy">Audio stays on this device. Phase Pal receives rhythm values, not song names or page content.</p>
+    </main>
+    <script type="module" src="./popup.ts"></script>
+  </body>
+</html>
