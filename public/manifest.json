@@ -5,7 +5,7 @@
   "version": "0.1.0",
   "minimum_chrome_version": "116",
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzcHWi3ZEURYdd5+AuagT1acWVNMEWkXp5XOy5oujW/moLrQJk2tfbJIsxxI/hOsBj7e68k0McCjDwPdYPFHHfm88FPS51BrdEpGy81RTKoXlV3x0SBmjy/LbkT5+wibAKIL05Nhod5m4a15Xx6H1IBrOJngHhW8DyAYqxMILRT7YlDdJfBA6fSQiiKi85888GFi9Ca5zZuDGgOf+fVnTDlzfDKvSyv6akED9kmmzd5RaHyO2PubRe/hcED5eZijPc7/YhHS2U0f0EwDi91EhpBu9AiK51W25QZ2GCMM855lL8+D7YN3BYfCO84tKVqQKmVWvG6BvS7uRsyURXdGxMwIDAQAB",
-  "permissions": ["nativeMessaging", "offscreen", "tabCapture", "storage"],
+  "permissions": ["nativeMessaging", "offscreen", "tabCapture"],
   "host_permissions": [
     "https://open.spotify.com/*",
     "https://music.youtube.com/*",

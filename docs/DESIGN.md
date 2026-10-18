@@ -3,14 +3,15 @@
 ## Data path
 
 1. A content script detects playback on Spotify Web, YouTube Music, or SoundCloud.
-2. The extension sends only playback booleans and a fixed provider ID.
+2. The extension sends playback and metadata-presence booleans with a fixed
+   provider ID, protocol fields, and timing fields.
 3. One popup click grants tab capture for that tab.
 4. An offscreen document keeps the captured tab audible and runs an AudioWorklet.
 5. The TypeScript analyzer publishes compact feature frames at 10 Hz.
 6. `phasepal-browser-host` validates each native message and forwards it to the
    authenticated Phase Pal loopback listener.
-7. Phase Pal maps the frame to `MusicReactiveSnapshot` and drives dance, particle,
-   tempo, and beat-phase behavior through the normal avatar stack.
+7. A compatible Phase Pal app maps the frame to `MusicReactiveSnapshot` and
+   drives dance, tempo, and beat-phase behavior through the avatar stack.
 
 ## Privacy boundary
 
@@ -38,6 +39,10 @@ owned streams and tasks. The native host uses bounded reconnect backoff and
 replays the last sanitized `hello` after Phase Pal restarts.
 
 ## V1 limits
+
+Playback on a supported site is treated as music. This path does not reliably
+separate songs, podcasts, speech, or advertisements. Beat estimates and section
+intensity values are audio features, not verified musical-section recognition.
 
 V1 supports Chrome 116 or newer on Windows and macOS. Native-host installation is
 developer-managed. Signing, store release, packaged installers, normal YouTube,

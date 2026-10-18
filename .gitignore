@@ -3,3 +3,8 @@ dist/
 BuildArtifacts/
 native-host/target/
 .DS_Store
+.env
+.env.*
+!.env.example
+*.log
+__pycache__/

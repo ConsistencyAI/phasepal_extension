@@ -10,6 +10,7 @@ const confidenceLabel = requireElement("confidence");
 const button = requireElement("capture-button") as HTMLButtonElement;
 const buttonLabel = requireElement("button-label");
 let state: PopupState | undefined;
+let actionPending = false;
 let transientError = "";
 let transientErrorUntil = 0;
 
@@ -18,28 +19,35 @@ const refreshTimer = window.setInterval(() => void refresh(), 500);
 window.addEventListener("unload", () => clearInterval(refreshTimer), { once: true });
 
 button.addEventListener("click", async () => {
-  if (!state) return;
-  transientError = "";
-  transientErrorUntil = 0;
-  button.disabled = true;
-  if (state.captureActive) {
-    await chrome.runtime.sendMessage({ type: "stop_capture" });
-  } else {
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    if (tab?.id === undefined || !providerForUrl(tab.url)) return;
-    try {
-      const streamId = await chrome.tabCapture.getMediaStreamId({ targetTabId: tab.id });
-      const response = await chrome.runtime.sendMessage({ type: "begin_capture", tabId: tab.id, streamId });
-      if (!response?.ok) {
-        showTransientError(String(response?.error ?? "Chrome could not start tab capture."));
+  if (!state || actionPending) return;
+  actionPending = true;
+  try {
+    transientError = "";
+    transientErrorUntil = 0;
+    button.disabled = true;
+    if (state.captureActive) {
+      await chrome.runtime.sendMessage({ type: "stop_capture" });
+    } else {
+      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      if (tab?.id === undefined || !providerForUrl(tab.url)) return;
+      try {
+        const streamId = await chrome.tabCapture.getMediaStreamId({ targetTabId: tab.id });
+        const response = await chrome.runtime.sendMessage({ type: "begin_capture", tabId: tab.id, streamId });
+        if (!response?.ok) {
+          showTransientError(String(response?.error ?? "Chrome could not start tab capture."));
+          return;
+        }
+      } catch (error) {
+        showTransientError(error instanceof Error ? error.message : "Chrome could not start tab capture.");
         return;
       }
-    } catch (error) {
-      showTransientError(error instanceof Error ? error.message : "Chrome could not start tab capture.");
-      return;
     }
+  } catch {
+    showTransientError("The extension service is not ready.");
+  } finally {
+    actionPending = false;
+    await refresh();
   }
-  await refresh();
 });
 
 async function refresh(): Promise<void> {
@@ -52,6 +60,8 @@ async function refresh(): Promise<void> {
     render(state);
   } catch {
     renderError("The extension service is not ready.");
+  } finally {
+    if (actionPending) button.disabled = true;
   }
 }
 
