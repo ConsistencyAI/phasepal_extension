@@ -4,10 +4,11 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "tsc --noEmit && vite build",
+    "build": "tsc --noEmit && vite build && vite build --mode content",
     "test": "vitest run",
     "test:watch": "vitest",
-    "check": "npm run test && npm run build"
+    "check": "npm run test && npm run build",
+    "package:store": "npm run check && python scripts/package-store.py"
   },
   "devDependencies": {
     "@types/chrome": "^0.1.36",

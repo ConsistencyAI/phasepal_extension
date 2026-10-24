@@ -10,11 +10,21 @@ bridge is required; this repository does not include the app.
 See the [V1 design](docs/DESIGN.md) for the data path, privacy boundary,
 authentication, and lifecycle rules.
 
-## Supported sites
+## Music site integrations
 
 - Spotify Web
 - YouTube Music
 - SoundCloud
+- Apple Music, Amazon Music (including regional players), Deezer, TIDAL, Qobuz,
+  Pandora and Yandex Music.
+- QQ Music and KuGou; JioSaavn; LINE MUSIC and Bugs; JOOX; Anghami; Audiomack.
+
+See [the exact site list and verification limits](docs/SUPPORTED_SITES.md).
+Users can also add their own websites through **Custom websites** in the popup.
+Chrome asks for access to that exact website. See [custom website setup](docs/CUSTOM_SITES.md).
+These are implemented integrations; account, region and live playback checks
+are still required before a runtime release. Older Phase Pal apps and native
+hosts accept only the original three services.
 
 Playback detection is automatic on these sites. Reported playback is treated as
 music: this is not a song, podcast, or speech classifier. Beat sync starts only after the
@@ -46,7 +56,21 @@ the extension ID is `liinajbmlphpehjkmjdffpjhajdpgfpm`; the native-host registra
 allows only that ID. The public `key` in the manifest fixes this development ID;
 it is not a private signing key or credential.
 
-## Native host development
+## Connect to Phase Pal
+
+Updated Phase Pal Windows and macOS builds bundle the native bridge and register
+it with Chrome when the app starts. Users install the extension and open Phase
+Pal; they do not need Rust, Python, Visual Studio, or terminal commands. This
+requires an app build that includes the new integration. Older app builds do not
+gain it from an extension update alone.
+
+The app's normal sidecar source and producer are `Tools/phase-browser-music` in
+the Phase Pal repository. That source snapshot records this repository's native
+host revision. Keep the fixed protocol and extension identity coordinated when
+updating either repository. Source integration is not packaged-player QA or store
+approval.
+
+## Standalone native host development (older app builds)
 
 Requirements: Rust 1.85 or newer (edition 2024) with Cargo, Python 3, and the platform
 linker/build tools. On macOS, install the Xcode command line tools. On Windows,
@@ -67,7 +91,8 @@ powershell -ExecutionPolicy Bypass -File scripts/install-native-host-windows.ps1
 
 The install scripts register only `app.phasepal.music` for extension ID
 `liinajbmlphpehjkmjdffpjhajdpgfpm`. Uninstall scripts remove only that exact
-per-user registration.
+per-user registration. These commands are developer fallback tools, not steps
+for users of an updated packaged app.
 
 Run Phase Pal, enable **Dance to Music** in its settings, and start playback on a
 supported site. Open the extension popup to check the connection. Select
@@ -80,6 +105,12 @@ scripts/uninstall-native-host-windows.ps1` on Windows. Remove the unpacked
 extension separately in Chrome.
 
 ## Local checks and contributions
+
+For a Chrome Web Store draft, run `npm run package:store` with Python 3 available.
+The checked upload ZIP and field drafts are written under
+`BuildArtifacts/chrome-web-store/<version>/`. See [the submission checklist](store/RELEASE_CHECKLIST.md).
+The store upload omits the development public key. Confirm the assigned store ID
+and coordinate it with the native host before building a release app.
 
 `npm run check` runs the TypeScript tests, type check, and extension build. Use
 `cargo test --manifest-path native-host/Cargo.toml --locked` for the native host.
@@ -96,4 +127,5 @@ a runtime release. No CI setup is required.
   Pal player release.
 
 Source is available under the [MIT license](LICENSE). Dependency licenses also
-apply when distributing built artifacts.
+apply when distributing built artifacts. The bunny logo is separate company
+artwork; see [NOTICE](NOTICE) for its use and distribution terms.

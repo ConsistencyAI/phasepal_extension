@@ -9,7 +9,7 @@
   <body>
     <main class="shell">
       <header class="header">
-        <div class="mark" aria-hidden="true"><span></span><span></span><span></span></div>
+        <img class="mark" src="/icons/icon-128.png" alt="" width="46" height="46">
         <div>
           <h1>Dance to Music</h1>
           <p id="provider">Phase Pal browser bridge</p>
@@ -39,6 +39,21 @@
       </button>
 
       <p class="privacy">Audio stays on this device. Phase Pal receives rhythm values, not song names or page content.</p>
+      <details class="custom-sites">
+        <summary>Custom websites</summary>
+        <p>Add a website to treat its audio or video as music. Speech and ads can also trigger dancing.</p>
+        <form id="site-form">
+          <label for="site-url">Website address</label>
+          <input id="site-url" type="text" inputmode="url" placeholder="https://radio.example" maxlength="2048" required autocomplete="off" spellcheck="false">
+          <button id="add-site" class="secondary-button" type="submit">Add website</button>
+        </form>
+        <p id="site-feedback" role="status" aria-live="polite"></p>
+        <ul id="custom-sites"></ul>
+      </details>
+      <details class="site-list">
+        <summary>Music sites</summary>
+        <p id="supported-sites"></p>
+      </details>
     </main>
     <script type="module" src="./popup.ts"></script>
   </body>

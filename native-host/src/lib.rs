@@ -494,7 +494,11 @@ fn validate_timestamp(value: Option<&Value>) -> Result<(), &'static str> {
 
 fn validate_provider(value: Option<&Value>) -> Result<(), &'static str> {
     match value.and_then(Value::as_str) {
-        Some("spotify_web" | "youtube_music" | "soundcloud") => Ok(()),
+        Some(
+            "spotify_web" | "youtube_music" | "soundcloud" | "apple_music" | "amazon_music"
+            | "deezer" | "tidal" | "qobuz" | "pandora" | "yandex_music" | "qq_music" | "kugou"
+            | "jiosaavn" | "line_music" | "bugs" | "joox" | "anghami" | "audiomack" | "custom_site",
+        ) => Ok(()),
         _ => Err("invalid_message"),
     }
 }
@@ -657,6 +661,55 @@ mod tests {
         let mut validator = MessageValidator::default();
         validator.validate(&hello(1)).unwrap();
         assert_eq!(validator.validate(&hello(1)), Err("invalid_message"));
+    }
+
+    #[test]
+    fn provider_allowlist_accepts_playback_and_features_and_rejects_unknown_sites() {
+        let providers = [
+            "spotify_web",
+            "youtube_music",
+            "soundcloud",
+            "apple_music",
+            "amazon_music",
+            "deezer",
+            "tidal",
+            "qobuz",
+            "pandora",
+            "yandex_music",
+            "qq_music",
+            "kugou",
+            "jiosaavn",
+            "line_music",
+            "bugs",
+            "joox",
+            "anghami",
+            "audiomack",
+            "custom_site",
+            "unknown_site",
+        ];
+        for provider in providers {
+            let playback = json!({
+                "type": "playback_state", "protocolVersion": 1, "sequence": 1,
+                "emittedAtUnixMs": 1234, "browserSessionId": "session-a", "provider": provider,
+                "playing": true, "hasTitle": true, "hasArtist": true,
+                "hasTimeline": true, "captureActive": true
+            });
+            let features = json!({
+                "type": "music_features", "protocolVersion": 1, "sequence": 1,
+                "emittedAtUnixMs": 1234, "browserSessionId": "session-a", "provider": provider,
+                "energy01": 0.5, "bpm": 120, "beatConfidence01": 0.8,
+                "beatPhase01": 0.2, "beatPulse": false, "onsetDensity01": 0.3,
+                "sectionIntensity": "medium"
+            });
+            for message in [playback, features] {
+                assert_eq!(
+                    MessageValidator::default().validate(&message).is_ok(),
+                    provider != "unknown_site",
+                    "provider {provider}, type {}",
+                    message["type"]
+                );
+            }
+        }
     }
 
     #[test]

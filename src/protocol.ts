@@ -1,7 +1,9 @@
 export const PROTOCOL_VERSION = 1 as const;
 export const NATIVE_HOST_NAME = "app.phasepal.music";
 
-export type MusicProvider = "spotify_web" | "youtube_music" | "soundcloud";
+import type { MusicProvider } from "./providers";
+export type { MusicProvider } from "./providers";
+export { providerForUrl } from "./providers";
 export type SectionIntensity = "unknown" | "low" | "medium" | "high";
 export type CaptureStopReason =
   | "user"
@@ -86,6 +88,7 @@ export interface FeatureSnapshot {
 
 export interface PopupState {
   supported: boolean;
+  customSites: string[];
   provider?: MusicProvider;
   phasePalConnected: boolean;
   danceToMusicEnabled: boolean;
@@ -94,19 +97,6 @@ export interface PopupState {
   beatConfidence01: number;
   bpm: number;
   errorCode: string;
-}
-
-export function providerForUrl(url: string | undefined): MusicProvider | undefined {
-  if (!url) return undefined;
-  try {
-    const hostname = new URL(url).hostname.toLowerCase();
-    if (hostname === "open.spotify.com") return "spotify_web";
-    if (hostname === "music.youtube.com") return "youtube_music";
-    if (hostname === "soundcloud.com" || hostname.endsWith(".soundcloud.com")) return "soundcloud";
-  } catch {
-    return undefined;
-  }
-  return undefined;
 }
 
 export function clamp01(value: number): number {

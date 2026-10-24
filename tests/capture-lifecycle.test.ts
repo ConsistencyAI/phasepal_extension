@@ -98,6 +98,10 @@ describe("background pending capture", () => {
   let getContexts: ReturnType<typeof vi.fn>;
   let createDocument: ReturnType<typeof vi.fn>;
   let nativePost: ReturnType<typeof vi.fn>;
+  let permissionRemoved: () => void;
+  let granted: boolean;
+  let registered: chrome.scripting.RegisteredContentScript[];
+  let containsPermission: ReturnType<typeof vi.fn>;
   const popup = { id: "extension", url: "chrome-extension://extension/src/popup.html" };
 
   beforeEach(async () => {
@@ -109,6 +113,9 @@ describe("background pending capture", () => {
     getContexts = vi.fn().mockResolvedValue([{}]);
     createDocument = vi.fn().mockResolvedValue(undefined);
     nativePost = vi.fn();
+    granted = false;
+    registered = [];
+    containsPermission = vi.fn(async () => granted);
     const port = { postMessage: nativePost, onMessage: { addListener: vi.fn() }, onDisconnect: { addListener: vi.fn() } };
     vi.stubGlobal("chrome", {
       runtime: {
@@ -121,9 +128,20 @@ describe("background pending capture", () => {
         sendMessage
       },
       offscreen: { createDocument, Reason: { USER_MEDIA: "USER_MEDIA" } },
+      permissions: {
+        contains: containsPermission, remove: vi.fn(async () => { granted = false; return true; }),
+        onRemoved: { addListener: (callback: () => void) => { permissionRemoved = callback; } }
+      },
+      scripting: {
+        getRegisteredContentScripts: vi.fn(async () => registered),
+        registerContentScripts: vi.fn(async (scripts: chrome.scripting.RegisteredContentScript[]) => { registered.push(...scripts); }),
+        unregisterContentScripts: vi.fn(async () => { registered = []; }),
+        executeScript: vi.fn().mockResolvedValue([])
+      },
       tabs: {
         query: vi.fn().mockResolvedValue([{ id: 4, url: "https://open.spotify.com/" }]),
         get: () => tab.promise,
+        sendMessage: vi.fn().mockResolvedValue(undefined),
         onRemoved: { addListener: (callback: typeof removed) => { removed = callback; } },
         onUpdated: { addListener: (callback: typeof updated) => { updated = callback; } }
       }
@@ -198,6 +216,78 @@ describe("background pending capture", () => {
     listener({ type: "get_popup_state" }, popup, stateReply);
     await vi.waitFor(() => expect(stateReply).toHaveBeenCalledWith(expect.objectContaining({ captureActive: true, bpm: 120 })));
     listener({ type: "stop_capture" }, popup, vi.fn());
+  });
+
+  async function addCustomSite() {
+    granted = true;
+    const reply = vi.fn();
+    listener({ type: "add_custom_site", origin: "https://radio.example" }, popup, reply);
+    await vi.waitFor(() => expect(reply).toHaveBeenCalledWith({ ok: true }));
+  }
+
+  it("custom capture uses audio energy when the page has no detectable media element", async () => {
+    await addCustomSite();
+    tab.resolve({ url: "https://radio.example/live?secret=private" });
+    const reply = vi.fn();
+    listener({ type: "begin_capture", tabId: 4, streamId: "custom" }, popup, reply);
+    await vi.waitFor(() => expect(reply).toHaveBeenCalledWith({ ok: true }));
+    const id = sendMessage.mock.calls.find(([message]) => message.streamId === "custom")![0].captureId;
+    let now = 10_000;
+    const clock = vi.spyOn(Date, "now").mockImplementation(() => now);
+    const offscreen = { id: "extension", url: "chrome-extension://extension/src/offscreen.html" };
+    const features = { energy01: 0.3, beatConfidence01: 0.9, bpm: 120, beatPhase01: 0.5, beatPulse: false, onsetDensity01: 0.3, sectionIntensity: "medium" };
+    try {
+      listener({ type: "offscreen_features", captureId: id, features }, offscreen, vi.fn());
+      expect(nativePost).toHaveBeenCalledWith(expect.objectContaining({ type: "playback_state", provider: "custom_site", playing: true, captureActive: true }));
+      now += 1100;
+      listener({ type: "offscreen_features", captureId: id, features: { ...features, energy01: 0 } }, offscreen, vi.fn());
+      expect(nativePost).toHaveBeenCalledWith(expect.objectContaining({ type: "playback_state", provider: "custom_site", playing: false }));
+      expect(JSON.stringify(nativePost.mock.calls)).not.toMatch(/radio\.example|secret|private/);
+    } finally { clock.mockRestore(); }
+    const removed = vi.fn();
+    listener({ type: "remove_custom_site", origin: "https://radio.example" }, popup, removed);
+    await vi.waitFor(() => expect(removed).toHaveBeenCalledWith({ ok: true }));
+    expect(sendMessage).toHaveBeenCalledWith(expect.objectContaining({ type: "offscreen_stop_capture", captureId: id }));
+  });
+
+  it("revoking site access cancels a pending custom capture", async () => {
+    await addCustomSite();
+    const pending = deferred<void>();
+    getContexts.mockResolvedValue([]);
+    createDocument.mockReturnValue(pending.promise);
+    tab.resolve({ url: "https://radio.example/" });
+    const reply = vi.fn();
+    listener({ type: "begin_capture", tabId: 4, streamId: "custom" }, popup, reply);
+    await vi.waitFor(() => expect(createDocument).toHaveBeenCalled());
+    granted = false;
+    permissionRemoved();
+    await vi.waitFor(() => expect(sendMessage).toHaveBeenCalledWith(expect.objectContaining({ type: "offscreen_stop_capture" })));
+    pending.resolve();
+    await vi.waitFor(() => expect(reply).toHaveBeenCalledWith({ ok: false, error: "capture_cancelled" }));
+    expect(sendMessage.mock.calls.some(([message]) => message.type === "offscreen_start_capture")).toBe(false);
+  });
+
+  it("rejects custom registration and playback without a grant or from a website sender", async () => {
+    const content = { id: "extension", url: "https://radio.example/", tab: { id: 4 } };
+    const reply = vi.fn();
+    expect(listener({ type: "add_custom_site", origin: "https://radio.example" }, content, reply)).toBe(false);
+    listener({ type: "provider_playback", provider: "custom_site", playing: true, hasTitle: false, hasArtist: false, hasTimeline: false, emittedAtUnixMs: 1 }, content, reply);
+    await vi.waitFor(() => expect(reply).toHaveBeenCalledWith({ ok: false }));
+    expect(nativePost.mock.calls.some(([message]) => message.playing === true)).toBe(false);
+  });
+
+  it("navigation rejects playback whose custom-site permission lookup finishes late", async () => {
+    await addCustomSite();
+    const permission = deferred<boolean>();
+    containsPermission.mockReturnValueOnce(permission.promise);
+    const reply = vi.fn();
+    listener({ type: "provider_playback", provider: "custom_site", playing: true, hasTitle: false, hasArtist: false,
+      hasTimeline: false, emittedAtUnixMs: 1 }, { id: "extension", url: "https://radio.example/", tab: { id: 4 } }, reply);
+    await vi.waitFor(() => expect(chrome.permissions.contains).toHaveBeenCalledWith({ origins: ["https://radio.example/*"] }));
+    updated(4, { status: "loading" });
+    permission.resolve(true);
+    await vi.waitFor(() => expect(reply).toHaveBeenCalledWith({ ok: false }));
+    expect(nativePost.mock.calls.some(([message]) => message.playing === true)).toBe(false);
   });
 
 });

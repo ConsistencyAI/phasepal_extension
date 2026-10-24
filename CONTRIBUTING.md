@@ -27,6 +27,11 @@ permissions, dependencies, telemetry, and network endpoints need an explicit
 reason and privacy review. Use behavior tests for meaningful changes and extend
 existing tests where possible.
 
+The custom-site feature is a narrow exception for locally saved user-approved
+HTTP(S) origins. Keep those addresses inside Chrome's extension settings and
+internal control messages; native messages still carry only `custom_site` and
+the fixed numeric/boolean protocol. Never save credentials, paths or query strings.
+
 ## Runtime release checks
 
 Before distributing an extension or host build, verify on each supported platform

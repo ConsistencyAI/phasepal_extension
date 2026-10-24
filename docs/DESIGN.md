@@ -2,7 +2,9 @@
 
 ## Data path
 
-1. A content script detects playback on Spotify Web, YouTube Music, or SoundCloud.
+1. A content script detects playback on the exact music-player hosts in
+   [SUPPORTED_SITES.md](SUPPORTED_SITES.md), or user-approved custom websites
+   described in [CUSTOM_SITES.md](CUSTOM_SITES.md).
 2. The extension sends playback and metadata-presence booleans with a fixed
    provider ID, protocol fields, and timing fields.
 3. One popup click grants tab capture for that tab.
@@ -45,5 +47,5 @@ separate songs, podcasts, speech, or advertisements. Beat estimates and section
 intensity values are audio features, not verified musical-section recognition.
 
 V1 supports Chrome 116 or newer on Windows and macOS. Native-host installation is
-developer-managed. Signing, store release, packaged installers, normal YouTube,
+developer-managed. Signing, store release, packaged installers,
 selected-text speech, and browser control are outside this milestone.
