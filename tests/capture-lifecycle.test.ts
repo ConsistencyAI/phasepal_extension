@@ -12,11 +12,19 @@ describe("offscreen capture ownership", () => {
   let getUserMedia: ReturnType<typeof vi.fn>;
   let addModule: ReturnType<typeof vi.fn>;
   let contexts: { close: ReturnType<typeof vi.fn> }[];
+  let worklets: any[];
+  let initialContextState: string;
+  let resumePending: Promise<void>;
+  let publishedMessages: ReturnType<typeof vi.fn>;
 
   beforeEach(async () => {
     vi.resetModules();
     vi.useFakeTimers();
     contexts = [];
+    worklets = [];
+    initialContextState = "running";
+    resumePending = Promise.resolve();
+    publishedMessages = vi.fn().mockResolvedValue(undefined);
     getUserMedia = vi.fn();
     addModule = vi.fn().mockResolvedValue(undefined);
     vi.stubGlobal("navigator", { mediaDevices: { getUserMedia } });
@@ -24,17 +32,18 @@ describe("offscreen capture ownership", () => {
       id: "extension",
       getURL: (path: string) => `chrome-extension://extension/${path}`,
       onMessage: { addListener: (callback: typeof listener) => { listener = callback; } },
-      sendMessage: vi.fn().mockResolvedValue(undefined)
+      sendMessage: publishedMessages
     } });
     vi.stubGlobal("AudioContext", class {
       audioWorklet = { addModule };
       destination = {};
-      state = "running";
+      state = initialContextState;
+      resume = vi.fn(async () => { await resumePending; this.state = "running"; });
       close = vi.fn().mockResolvedValue(undefined);
       createMediaStreamSource = vi.fn(() => ({ connect: vi.fn() }));
       constructor() { contexts.push(this); }
     });
-    vi.stubGlobal("AudioWorkletNode", class { port = {}; });
+    vi.stubGlobal("AudioWorkletNode", class { port = {}; constructor() { worklets.push(this); } });
     await import("../src/offscreen");
   });
 
@@ -51,11 +60,49 @@ describe("offscreen capture ownership", () => {
     return reply;
   }
 
-  it.each(["getUserMedia", "addModule"])("stop cancels pending %s and closes its resources", async stage => {
+  it("resumes suspended audio and publishes BPM and beat lock from received PCM", async () => {
+    initialContextState = "suspended";
+    getUserMedia.mockResolvedValue(stream().value);
+    const reply = start("rhythm");
+    await vi.advanceTimersByTimeAsync(0);
+    expect(reply).toHaveBeenCalledWith({ ok: true });
+    expect((contexts[0] as any).resume).toHaveBeenCalledOnce();
+    const rate = 48_000;
+    for (let offset = 0; offset < rate * 14; offset += 1024) {
+      const samples = Float32Array.from({ length: 1024 }, (_, index) => {
+        const time = (offset + index) / rate;
+        return 0.18 * Math.sin(2 * Math.PI * 220 * time)
+          + 0.28 * Math.exp(-(time % 0.5) * 35) * Math.sin(2 * Math.PI * 85 * time);
+      });
+      worklets[0].port.onmessage({ data: { type: "pcm", sampleRate: rate, samples } });
+    }
+    await vi.advanceTimersByTimeAsync(100);
+    const published = publishedMessages.mock.calls.map(([message]) => message)
+      .findLast(message => message.type === "offscreen_features");
+    expect(published.audioState).toBe("analyzing");
+    expect(published.features.bpm).toBeGreaterThan(116);
+    expect(published.features.bpm).toBeLessThan(124);
+    expect(published.features.beatConfidence01).toBeGreaterThanOrEqual(0.55);
+    listener({ type: "offscreen_stop_capture", captureId: "rhythm" }, sender, vi.fn());
+  });
+
+  it("reports missing audio samples instead of claiming that beat analysis is running", async () => {
+    getUserMedia.mockResolvedValue(stream().value);
+    start("missing-pcm");
+    await vi.advanceTimersByTimeAsync(3_100);
+    expect(chrome.runtime.sendMessage).toHaveBeenLastCalledWith(expect.objectContaining({ audioState: "no_frames" }));
+    worklets[0].onprocessorerror();
+    expect(chrome.runtime.sendMessage).toHaveBeenLastCalledWith(expect.objectContaining({ type: "offscreen_capture_stopped", reason: "capture_error" }));
+    expect(contexts[0]!.close).toHaveBeenCalled();
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it.each(["getUserMedia", "addModule", "resume"])("stop cancels pending %s and closes its resources", async stage => {
     const media = stream();
     const pending = deferred<any>();
     getUserMedia.mockReturnValue(stage === "getUserMedia" ? pending.promise : Promise.resolve(media.value));
     if (stage === "addModule") addModule.mockReturnValue(pending.promise);
+    if (stage === "resume") { initialContextState = "suspended"; resumePending = pending.promise; }
     const reply = start("a");
     await vi.advanceTimersByTimeAsync(0);
     listener({ type: "offscreen_stop_capture", captureId: "a" }, sender, vi.fn());
@@ -92,7 +139,11 @@ describe("offscreen capture ownership", () => {
 describe("background pending capture", () => {
   let listener: (message: unknown, sender: unknown, reply: (value: unknown) => void) => boolean;
   let removed: (id: number) => void;
-  let updated: (id: number, change: unknown) => void;
+  let updated: (id: number, change: unknown, tab?: unknown) => void;
+  let hostMessage: (message: unknown) => void;
+  let hostDisconnect: () => void;
+  let savedAuto: boolean;
+  let savedHidePrompts: boolean;
   let tab: ReturnType<typeof deferred<{ url: string }>>;
   let sendMessage: ReturnType<typeof vi.fn>;
   let getContexts: ReturnType<typeof vi.fn>;
@@ -116,8 +167,19 @@ describe("background pending capture", () => {
     granted = false;
     registered = [];
     containsPermission = vi.fn(async () => granted);
-    const port = { postMessage: nativePost, onMessage: { addListener: vi.fn() }, onDisconnect: { addListener: vi.fn() } };
+    savedAuto = false;
+    savedHidePrompts = false;
+    const port = { postMessage: nativePost,
+      onMessage: { addListener: (callback: typeof hostMessage) => { hostMessage = callback; } },
+      onDisconnect: { addListener: (callback: typeof hostDisconnect) => { hostDisconnect = callback; } } };
     vi.stubGlobal("chrome", {
+      storage: { local: {
+        get: vi.fn(async () => ({ autoBeatSync: savedAuto, hideBeatSyncPrompts: savedHidePrompts })),
+        set: vi.fn(async value => {
+          if (typeof value.autoBeatSync === "boolean") savedAuto = value.autoBeatSync;
+          if (typeof value.hideBeatSyncPrompts === "boolean") savedHidePrompts = value.hideBeatSyncPrompts;
+        })
+      } },
       runtime: {
         id: "extension", connectNative: () => port,
         getManifest: () => ({ version: "0.1.0" }),
@@ -147,6 +209,7 @@ describe("background pending capture", () => {
       }
     });
     await import("../src/background");
+    hostMessage({ type: "host_status", protocolVersion: 1, phasePalConnected: true, danceToMusicEnabled: true, errorCode: "none" });
   });
 
   afterEach(() => { vi.unstubAllGlobals(); });
@@ -216,6 +279,102 @@ describe("background pending capture", () => {
     listener({ type: "get_popup_state" }, popup, stateReply);
     await vi.waitFor(() => expect(stateReply).toHaveBeenCalledWith(expect.objectContaining({ captureActive: true, bpm: 120 })));
     listener({ type: "stop_capture" }, popup, vi.fn());
+  });
+
+  async function setAuto(enabled: boolean) {
+    const reply = vi.fn();
+    listener({ type: "set_auto_beat_sync", enabled }, popup, reply);
+    await vi.waitFor(() => expect(reply).toHaveBeenCalledWith({ ok: true }));
+  }
+
+  async function startMusic() {
+    tab.resolve({ url: "https://music.youtube.com/watch?v=one" });
+    const reply = vi.fn();
+    listener({ type: "begin_capture", tabId: 4, streamId: "music" }, popup, reply);
+    await vi.waitFor(() => expect(reply).toHaveBeenCalledWith({ ok: true }));
+  }
+
+  async function reportMusic() {
+    const reply = vi.fn();
+    listener({ type: "provider_playback", provider: "youtube_music", playing: true,
+      hasTitle: true, hasArtist: true, hasTimeline: true, emittedAtUnixMs: 1 },
+      { id: "extension", url: "https://music.youtube.com/", tab: { id: 4 } }, reply);
+    await vi.waitFor(() => expect(reply).toHaveBeenCalledWith({ ok: true }));
+  }
+
+  it("hides the site reminder as soon as capture starts", async () => {
+    await reportMusic();
+    expect(chrome.tabs.sendMessage).toHaveBeenCalledWith(4, { type: "beat_sync_prompt", show: true });
+    await startMusic();
+    expect(chrome.tabs.sendMessage).toHaveBeenLastCalledWith(4, { type: "beat_sync_prompt", show: false });
+    listener({ type: "stop_capture" }, popup, vi.fn());
+  });
+
+  it("keeps Don't show again saved after a worker restart and across music pages", async () => {
+    await reportMusic();
+    const reply = vi.fn();
+    listener({ type: "hide_beat_sync_prompts" },
+      { id: "extension", url: "https://music.youtube.com/", tab: { id: 4 } }, reply);
+    await vi.waitFor(() => expect(reply).toHaveBeenCalledWith({ ok: true }));
+    expect(savedHidePrompts).toBe(true);
+    vi.mocked(chrome.tabs.sendMessage).mockClear();
+    vi.resetModules();
+    await import("../src/background");
+    hostMessage({ type: "host_status", protocolVersion: 1, phasePalConnected: true, danceToMusicEnabled: true, errorCode: "none" });
+    await reportMusic();
+    expect(chrome.tabs.sendMessage).not.toHaveBeenCalledWith(expect.anything(), { type: "beat_sync_prompt", show: true });
+    expect(chrome.tabs.sendMessage).toHaveBeenCalledWith(4, { type: "beat_sync_prompt", show: false });
+  });
+
+  it("saves Auto Beat Sync across worker reloads without starting capture", async () => {
+    await setAuto(true);
+    expect(savedAuto).toBe(true);
+    vi.resetModules();
+    await import("../src/background");
+    const reply = vi.fn();
+    listener({ type: "get_popup_state" }, popup, reply);
+    await vi.waitFor(() => expect(reply).toHaveBeenCalledWith(expect.objectContaining({ autoBeatSync: true, captureActive: false })));
+    expect(sendMessage.mock.calls.some(([message]) => message.type === "offscreen_start_capture")).toBe(false);
+  });
+
+  it("keeps capture through pauses and same-site track changes, then stops on another site", async () => {
+    await setAuto(true);
+    await startMusic();
+    const content = { id: "extension", url: "https://music.youtube.com/watch?v=one", tab: { id: 4 } };
+    listener({ type: "provider_playback", provider: "youtube_music", playing: false, hasTitle: true, hasArtist: true, hasTimeline: true, emittedAtUnixMs: 1 }, content, vi.fn());
+    listener({ type: "provider_unloaded" }, content, vi.fn());
+    updated(4, { url: "https://music.youtube.com/watch?v=two" });
+    updated(4, { status: "loading" }, { url: "https://music.youtube.com/watch?v=two" });
+    const reply = vi.fn();
+    listener({ type: "get_popup_state" }, popup, reply);
+    await vi.waitFor(() => expect(reply).toHaveBeenCalledWith(expect.objectContaining({ captureActive: true })));
+    expect(sendMessage.mock.calls.filter(([message]) => message.type === "offscreen_start_capture")).toHaveLength(1);
+    expect(sendMessage.mock.calls.some(([message]) => message.type === "offscreen_stop_capture")).toBe(false);
+    updated(4, { url: "https://example.com" });
+    expect(sendMessage).toHaveBeenCalledWith(expect.objectContaining({ type: "offscreen_stop_capture" }));
+  });
+
+  it.each(["setting", "disconnect", "opt-out", "manual-stop"])("stops active auto capture on %s without restarting", async reason => {
+    await setAuto(true);
+    await startMusic();
+    if (reason === "setting") hostMessage({ type: "host_status", protocolVersion: 1, phasePalConnected: true, danceToMusicEnabled: false, errorCode: "none" });
+    if (reason === "disconnect") hostDisconnect();
+    if (reason === "opt-out") await setAuto(false);
+    if (reason === "manual-stop") listener({ type: "stop_capture" }, popup, vi.fn());
+    expect(sendMessage).toHaveBeenCalledWith(expect.objectContaining({ type: "offscreen_stop_capture" }));
+    expect(sendMessage.mock.calls.filter(([message]) => message.type === "offscreen_start_capture")).toHaveLength(1);
+    const reply = vi.fn();
+    listener({ type: "get_popup_state" }, popup, reply);
+    await vi.waitFor(() => expect(reply).toHaveBeenCalledWith(expect.objectContaining({ captureActive: false })));
+  });
+
+  it("cancels a pending capture when Dance to Music is disabled", async () => {
+    const reply = vi.fn();
+    listener({ type: "begin_capture", tabId: 4, streamId: "pending" }, popup, reply);
+    hostMessage({ type: "host_status", protocolVersion: 1, phasePalConnected: true, danceToMusicEnabled: false, errorCode: "none" });
+    tab.resolve({ url: "https://music.youtube.com/" });
+    await vi.waitFor(() => expect(reply).toHaveBeenCalledWith({ ok: false, error: "capture_cancelled" }));
+    expect(sendMessage.mock.calls.some(([message]) => message.type === "offscreen_start_capture")).toBe(false);
   });
 
   async function addCustomSite() {

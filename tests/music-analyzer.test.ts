@@ -22,6 +22,25 @@ describe("MusicFeatureAnalyzer", () => {
     expect(analyzer.snapshot.bpm).toBe(0);
   });
 
+  it("finds a steady beat over a continuous music bed", () => {
+    const analyzer = new MusicFeatureAnalyzer();
+    const sampleRate = 48_000;
+    const bpm = 120;
+    const samples = new Float32Array(sampleRate * 14);
+    for (let index = 0; index < samples.length; index++) {
+      const time = index / sampleRate;
+      const beatTime = time % (60 / bpm);
+      const bed = 0.18 * Math.sin(2 * Math.PI * 220 * time);
+      const drum = 0.28 * Math.exp(-beatTime * 35) * Math.sin(2 * Math.PI * 85 * time);
+      samples[index] = bed + drum;
+    }
+    for (let offset = 0; offset < samples.length; offset += 1024) {
+      analyzer.analyzeMono(samples.subarray(offset, offset + 1024), sampleRate);
+    }
+    expect(analyzer.snapshot.beatConfidence01).toBeGreaterThanOrEqual(0.55);
+    expect(analyzer.snapshot.bpm).toBeCloseTo(bpm, -1);
+  });
+
   it("does not lock strongly to speech-like noise", () => {
     const analyzer = new MusicFeatureAnalyzer();
     const samples = speechLikeNoise(12, 48_000);

@@ -106,6 +106,24 @@ extension separately in Chrome.
 
 ## Local checks and contributions
 
+### Auto Beat Sync and site reminder
+
+Auto Beat Sync is off by default and saved locally in Chrome. Turn it on in the
+popup. Opening the extension with Auto Beat Sync on attempts capture once for the
+current ready music tab; if Chrome requires another action, select Enable Beat Sync.
+Capture stays active
+through pauses and same-site track changes; it does not switch to another tab.
+Turning Auto Beat Sync off or pressing Stop ends capture. Turning Dance to Music
+off, losing the app connection or site permission, leaving the site, closing the
+tab, or ending the stream also stops capture. A new tab or ended stream needs a
+new extension invocation or Enable click; the saved option never grants unattended capture permission.
+
+Supported pages show a dismissible “Want to enable Beat Sync?” reminder when the
+app is ready and no capture is active. It directs users to the extension's toolbar
+popup. Not now dismisses it for that document. Don't show again saves a local
+choice that suppresses reminders across sites and restarts. No desktop notification permission is
+needed. Capture still includes speech and ads from the selected tab.
+
 For a Chrome Web Store draft, run `npm run package:store` with Python 3 available.
 The checked upload ZIP and field drafts are written under
 `BuildArtifacts/chrome-web-store/<version>/`. See [the submission checklist](store/RELEASE_CHECKLIST.md).

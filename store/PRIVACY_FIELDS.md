@@ -18,7 +18,10 @@ URLs, song names, raw audio or transcripts are sent through this protocol.
 
 After the user selects Enable Beat Sync for the active tab, obtain that tab's
 audio stream for local energy, tempo and beat analysis. Stop Beat Sync, tab close,
-navigation, stream end, or access removal stops the capture. No microphone access
+leaving the site, stream end, or access removal stops the capture. Disabling Dance
+to Music, losing the app connection, or opting out of Auto Beat Sync also stops it.
+With saved Auto Beat Sync enabled, pauses and same-site track changes preserve the
+user-approved stream. New streams still require a user action. No microphone access
 or remote audio upload is used.
 
 ### offscreen
@@ -26,6 +29,14 @@ or remote audio upload is used.
 Run the user-approved audio stream and AudioWorklet outside the short-lived popup,
 keep the tab audible, and publish numeric rhythm features while capture is active.
 The document is packaged with the extension and loads no remote executable code.
+
+### storage
+
+Save the Auto Beat Sync and Don't show again booleans in Chrome local storage.
+They are not synced or sent to the app. Auto Beat Sync is off by default. Not now
+uses document-local memory; Don't show again suppresses reminders across sites and
+browser restarts. Opening the extension with Auto Beat Sync saved attempts capture
+once on a ready supported tab. Failure or Stop does not trigger repeated retries.
 
 ### scripting
 

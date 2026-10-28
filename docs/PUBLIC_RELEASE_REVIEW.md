@@ -79,6 +79,29 @@ Rust dependencies were compiled and reviewed at the source/dependency-list level
 
 ## Remaining release checks
 
+Beat-lock follow-up (2026-10-28): reproduced zero BPM/confidence for a regular
+120 BPM drum over a sustained backing tone. Onset sensitivity now compares RMS
+level to the recent baseline, rather than requiring the rise alone to exceed
+that ratio. The regression fails before the fix and passes after it; existing
+silence, speech-like noise, and irregular-rhythm checks still pass. Offscreen
+startup now resumes a suspended AudioContext and stops on processor failure.
+The popup distinguishes missing/suspended audio samples and silence from low
+beat confidence. Missing samples clear old rhythm values; these diagnostics stay
+inside the extension and do not change the native protocol. All 109 tests pass,
+including PCM-to-feature publication and cancellation during context resume.
+Live Chrome and real-song accuracy remain unverified by these fixtures.
+
+Auto Beat Sync follow-up (2026-10-28): added an off-by-default boolean in Chrome
+local storage and a popup checkbox. After the user's Enable click, same-site
+track changes and pauses preserve the approved stream. Opt-out, manual Stop,
+Dance to Music off, app disconnect, leaving the site, permission loss, tab close,
+and stream end stop capture. Supported pages show a dismissible local reminder
+that points to the toolbar popup; it never starts capture. Added `storage` only
+for the boolean, with no new dependency or desktop notification permission.
+All 103 tests, TypeScript checks, and both production builds passed. These checks
+use fake Chrome/audio APIs and DOM fixtures. Live Chrome navigation, audible
+playback, reminder appearance, and real app-disable cleanup still need checking.
+
 Custom-site follow-up: users can add and remove exact HTTP(S) websites from the
 popup. Access is requested per site using optional permissions; persistent Chrome
 script registrations store only origins. The native protocol adds the fixed

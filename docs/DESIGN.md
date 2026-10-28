@@ -40,6 +40,18 @@ failure, user stop, Chrome stdin close, app stop, and app dispose all close thei
 owned streams and tasks. The native host uses bounded reconnect backoff and
 replays the last sanitized `hello` after Phase Pal restarts.
 
+Auto Beat Sync is a local saved boolean, off by default. It preserves one
+user-approved tab stream through pauses and same-origin navigation. It does not
+request a new stream or move capture to another tab. App unavailability or Dance
+to Music off cancels pending and active capture. New captures are rejected unless
+the app reports ready. Manual Stop, opt-out, unsupported navigation, lost optional
+permission, tab close, or stream end also end capture. A document-local dismissible
+reminder points users to the toolbar popup; it cannot grant capture authority.
+The popup attempts saved Auto Beat Sync once when opened on a ready supported tab.
+An existing stream shows Stop; failed requests and manual Stop do not retry during
+that popup session. Reminders hide when capture starts, including pending setup.
+Don't show again saves a second local boolean; Not now remains document-local.
+
 ## V1 limits
 
 Playback on a supported site is treated as music. This path does not reliably

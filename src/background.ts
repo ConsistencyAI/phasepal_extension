@@ -37,6 +37,7 @@ let pendingTabId: number | undefined;
 let captureId: string | undefined;
 let capturedProvider: MusicProvider | undefined;
 let latestFeatures: FeatureSnapshot = inactiveFeatureState();
+let captureAudioState: PopupState["captureAudioState"] = "starting";
 let hostStatus: HostStatusMessage = {
   type: "host_status",
   protocolVersion: PROTOCOL_VERSION,
@@ -50,6 +51,17 @@ let captureSiteOrigin: string | undefined;
 let lastCustomSoundAt = 0;
 let lastCustomPublicationAt = 0;
 let lastCustomPlaying = false;
+let captureOrigin: string | undefined;
+let autoBeatSync = false;
+let hideBeatSyncPrompts = false;
+let preferencesLoaded = false;
+const preferencesReady = chrome.storage.local.get(["autoBeatSync", "hideBeatSyncPrompts"]).then(value => {
+  autoBeatSync = value.autoBeatSync === true;
+  hideBeatSyncPrompts = value.hideBeatSyncPrompts === true;
+  preferencesLoaded = true;
+  updatePrompts();
+}).catch(() => undefined);
+let preferenceQueue: Promise<unknown> = preferencesReady;
 
 ensureNativePort();
 
@@ -58,6 +70,27 @@ chrome.runtime.onMessage.addListener((message: unknown, sender, sendResponse) =>
   const candidate = message as Record<string, unknown>;
   const popupSender = !sender.tab && sender.url === chrome.runtime.getURL("src/popup.html");
   const offscreenSender = !sender.tab && sender.url === chrome.runtime.getURL("src/offscreen.html");
+  if (candidate.type === "hide_beat_sync_prompts" && sender.tab?.id !== undefined && (sender.frameId ?? 0) === 0) {
+    const url = sender.url;
+    preferenceQueue = preferenceQueue.catch(() => undefined).then(async () => {
+      if (!await resolvedProvider(url)) { sendResponse({ ok: false }); return; }
+      await chrome.storage.local.set({ hideBeatSyncPrompts: true });
+      hideBeatSyncPrompts = true;
+      updatePrompts();
+      sendResponse({ ok: true });
+    }).catch(() => sendResponse({ ok: false }));
+    return true;
+  }
+  if (candidate.type === "set_auto_beat_sync" && popupSender && typeof candidate.enabled === "boolean") {
+    const enabled = candidate.enabled;
+    preferenceQueue = preferenceQueue.catch(() => undefined).then(async () => {
+      await chrome.storage.local.set({ autoBeatSync: enabled });
+      autoBeatSync = enabled;
+      if (!enabled) await stopCapture("user");
+      sendResponse({ ok: true });
+    }).catch(() => sendResponse({ ok: false }));
+    return true;
+  }
   if (candidate.type === "get_site_provider" && sender.tab?.id !== undefined && (sender.frameId ?? 0) === 0) {
     void resolvedProvider(sender.url).then(provider => sendResponse({ provider })).catch(() => sendResponse({}));
     return true;
@@ -78,6 +111,10 @@ chrome.runtime.onMessage.addListener((message: unknown, sender, sendResponse) =>
     void resolvedProvider(sender.url).then(provider => {
       if (!provider || candidate.provider !== provider || tabDocuments.get(tabId) !== document) { sendResponse({ ok: false }); return; }
       updateProvider(tabId, candidate as unknown as ProviderPlaybackUpdate, customSiteOrigin(sender.url));
+      void preferencesReady.then(() => {
+        if (tabDocuments.get(tabId) !== document) return;
+        return chrome.tabs.sendMessage(tabId, { type: "beat_sync_prompt", show: shouldShowPrompt() }).catch(() => undefined);
+      });
       sendResponse({ ok: true });
     }).catch(() => sendResponse({ ok: false }));
     return true;
@@ -85,7 +122,7 @@ chrome.runtime.onMessage.addListener((message: unknown, sender, sendResponse) =>
   if (candidate.type === "provider_unloaded" && sender.tab?.id !== undefined && (sender.frameId ?? 0) === 0) {
     tabDocuments.delete(sender.tab.id);
     tabs.delete(sender.tab.id);
-    if (capturedTabId === sender.tab.id || pendingTabId === sender.tab.id) void stopCapture("unsupported_navigation");
+    if (pendingTabId === sender.tab.id || (capturedTabId === sender.tab.id && !autoBeatSync)) void stopCapture("unsupported_navigation");
     publishSelectedPlayback();
     sendResponse({ ok: true });
     return false;
@@ -100,7 +137,11 @@ chrome.runtime.onMessage.addListener((message: unknown, sender, sendResponse) =>
     return true;
   }
   if (candidate.type === "offscreen_features" && offscreenSender && typeof candidate.captureId === "string" && candidate.captureId === captureId) {
-    if (isFeatureSnapshot(candidate.features)) receiveFeatures(candidate.features);
+    if (isFeatureSnapshot(candidate.features)) {
+      if (["starting", "no_frames", "suspended", "silent", "analyzing"].includes(String(candidate.audioState)))
+        captureAudioState = candidate.audioState as PopupState["captureAudioState"];
+      receiveFeatures(candidate.features);
+    }
     return false;
   }
   if (candidate.type === "offscreen_capture_stopped" && offscreenSender && typeof candidate.captureId === "string" && candidate.captureId === captureId) {
@@ -139,11 +180,13 @@ chrome.tabs.onRemoved.addListener(tabId => {
   else publishSelectedPlayback();
 });
 
-chrome.tabs.onUpdated.addListener((tabId, change) => {
+chrome.tabs.onUpdated.addListener((tabId, change, tab) => {
   if (change.status !== "loading" && change.url === undefined) return;
   tabDocuments.delete(tabId);
   tabs.delete(tabId);
-  if (capturedTabId === tabId || pendingTabId === tabId) void stopCapture("unsupported_navigation");
+  const url = change.url ?? tab?.url;
+  const sameSite = customSiteOrigin(url) === captureOrigin && Boolean(captureOrigin);
+  if (pendingTabId === tabId || (capturedTabId === tabId && (!autoBeatSync || !sameSite))) void stopCapture("unsupported_navigation");
   else publishSelectedPlayback();
 });
 
@@ -193,10 +236,13 @@ function publishSelectedPlayback(): void {
 }
 
 async function beginCapture(tabId: number, streamId: string): Promise<{ ok: boolean; error?: string }> {
+  if (!bridgeReady()) return { ok: false, error: "phasepal_unavailable" };
   if (!Number.isInteger(tabId) || !streamId) return { ok: false, error: "capture_error" };
   void stopCapture("replaced");
   const id = crypto.randomUUID();
   captureId = id;
+  captureAudioState = "starting";
+  updatePrompts();
   pendingTabId = tabId;
   try {
     const tab = await chrome.tabs.get(tabId).catch(() => undefined);
@@ -207,6 +253,7 @@ async function beginCapture(tabId: number, streamId: string): Promise<{ ok: bool
       return { ok: false, error: "unsupported_navigation" };
     }
     captureSiteOrigin = provider === "custom_site" ? customSiteOrigin(tab?.url) : undefined;
+    captureOrigin = customSiteOrigin(tab?.url);
     await ensureOffscreenDocument();
     if (captureId !== id) return { ok: false, error: "capture_cancelled" };
     const response = await chrome.runtime.sendMessage({ type: "offscreen_start_capture", tabId, streamId, captureId: id });
@@ -219,6 +266,7 @@ async function beginCapture(tabId: number, streamId: string): Promise<{ ok: bool
     pendingTabId = undefined;
     capturedProvider = provider;
     latestFeatures = inactiveFeatureState();
+    updatePrompts();
     publishSelectedPlayback();
     return { ok: true };
   } catch {
@@ -241,10 +289,12 @@ function finishCapture(reason: CaptureStopReason, notifyHost: boolean): void {
   capturedTabId = undefined;
   capturedProvider = undefined;
   captureSiteOrigin = undefined;
+  captureOrigin = undefined;
   lastCustomSoundAt = 0;
   lastCustomPublicationAt = 0;
   lastCustomPlaying = false;
   latestFeatures = inactiveFeatureState();
+  updatePrompts();
   if (notifyHost) sendNative({ ...baseMessage(), type: "capture_stopped", reason });
   publishSelectedPlayback();
 }
@@ -298,14 +348,20 @@ function ensureNativePort(): void {
     const port = chrome.runtime.connectNative(NATIVE_HOST_NAME);
     nativePort = port;
     port.onMessage.addListener(message => {
+      if (nativePort !== port) return;
       if ((message as HostStatusMessage).type === "host_status") {
+        const wasReady = bridgeReady();
         hostStatus = message as HostStatusMessage;
+        if (!bridgeReady()) void stopCapture("user");
+        if (wasReady !== bridgeReady()) updatePrompts();
       }
     });
     port.onDisconnect.addListener(() => {
       if (nativePort !== port) return;
       nativePort = undefined;
       hostStatus = { ...hostStatus, phasePalConnected: false, errorCode: "phasepal_unavailable" };
+      void stopCapture("user");
+      updatePrompts();
       scheduleReconnect();
     });
     sendNative({
@@ -353,10 +409,13 @@ async function ensureOffscreenDocument(): Promise<void> {
 }
 
 async function buildPopupState(): Promise<PopupState> {
+  await preferenceQueue;
   const [active] = await chrome.tabs.query({ active: true, currentWindow: true });
   const activeProvider = await resolvedProvider(active?.url);
   const tabState = active?.id !== undefined ? tabs.get(active.id) : undefined;
   return {
+    autoBeatSync,
+    captureAudioState,
     supported: Boolean(activeProvider),
     customSites: customSites.origins,
     provider: activeProvider ?? capturedProvider,
@@ -368,6 +427,20 @@ async function buildPopupState(): Promise<PopupState> {
     bpm: latestFeatures.bpm,
     errorCode: hostStatus.errorCode
   };
+}
+
+function bridgeReady(): boolean {
+  return hostStatus.phasePalConnected === true && hostStatus.danceToMusicEnabled === true && hostStatus.errorCode === "none";
+}
+
+function updatePrompts(): void {
+  for (const tabId of tabs.keys()) {
+    void chrome.tabs.sendMessage(tabId, { type: "beat_sync_prompt", show: shouldShowPrompt() }).catch(() => undefined);
+  }
+}
+
+function shouldShowPrompt(): boolean {
+  return preferencesLoaded && !hideBeatSyncPrompts && bridgeReady() && captureId === undefined;
 }
 
 async function resolvedProvider(url: string | undefined): Promise<MusicProvider | undefined> {

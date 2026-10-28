@@ -46,6 +46,7 @@ remove the extension to stop automatic playback detection as well.
 | `nativeMessaging` | Exchange fixed messages with the installed local host. |
 | `tabCapture` | Obtain the tab audio stream after the popup action. |
 | `offscreen` | Analyze audio outside the popup lifetime. |
+| `storage` | Save Auto Beat Sync and the Don't show again reminder choice locally on this device. |
 
 The manifest and permission list should be reviewed with each release.
 
@@ -74,3 +75,15 @@ The source does not define what the Phase Pal application stores or sends after
 receiving a frame. Consult that application's privacy information separately.
 Supported websites and Chrome also have their own data practices. Local source
 review does not prove the behavior of a future packaged binary.
+
+Auto Beat Sync is off by default. Its boolean preference is stored in
+`chrome.storage.local`, not synced or sent to Phase Pal. The Don't show again
+choice is a second local boolean that suppresses site reminders across sites and
+restarts. Not now dismisses a reminder only for the current document. Once the user enables
+capture for a tab, it can remain active during pauses and same-site track changes.
+Stop, Auto Beat Sync opt-out, Dance to Music off, app disconnect, permission loss,
+tab close, leaving the site, or stream end stops capture. New captures still need
+the user's extension invocation. With Auto Beat Sync saved, opening the popup on
+a ready supported tab attempts capture once. Stop and permission failure do not
+cause automatic retries. A dismissible reminder is drawn locally on supported
+pages when the app is ready and capture is inactive.

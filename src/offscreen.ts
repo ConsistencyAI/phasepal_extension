@@ -1,4 +1,4 @@
-import { MusicFeatureAnalyzer } from "./music-analyzer";
+import { MusicFeatureAnalyzer, inactiveFeatures } from "./music-analyzer";
 import type { CaptureStopReason } from "./protocol";
 
 interface CaptureSession {
@@ -8,6 +8,8 @@ interface CaptureSession {
   timer?: ReturnType<typeof setInterval>;
   analyzer: MusicFeatureAnalyzer;
   pendingBeatPulse: boolean;
+  startedAt: number;
+  lastPcmAt?: number;
 }
 
 let current: CaptureSession | undefined;
@@ -30,7 +32,7 @@ chrome.runtime.onMessage.addListener((message: unknown, sender, sendResponse) =>
 
 async function startCapture(streamId: string, id: string): Promise<{ ok: boolean; error?: string }> {
   if (current) stopCapture(current, "replaced", false);
-  const session: CaptureSession = { id, analyzer: new MusicFeatureAnalyzer(), pendingBeatPulse: false };
+  const session: CaptureSession = { id, analyzer: new MusicFeatureAnalyzer(), pendingBeatPulse: false, startedAt: Date.now() };
   current = session;
   try {
     const constraints = {
@@ -50,13 +52,20 @@ async function startCapture(streamId: string, id: string): Promise<{ ok: boolean
     }
     const source = session.context.createMediaStreamSource(session.stream);
     const worklet = new AudioWorkletNode(session.context, "phasepal-pcm", { numberOfInputs: 1, numberOfOutputs: 0 });
+    worklet.onprocessorerror = () => stopCapture(session, "capture_error", true);
     worklet.port.onmessage = event => {
       if (current !== session || event.data?.type !== "pcm") return;
+      session.lastPcmAt = Date.now();
       const snapshot = session.analyzer.analyzeMono(event.data.samples as Float32Array, Number(event.data.sampleRate));
       session.pendingBeatPulse ||= snapshot.beatPulse;
     };
     source.connect(worklet);
     source.connect(session.context.destination);
+    if (session.context.state !== "running") await session.context.resume();
+    if (current !== session) {
+      stopCapture(session, "replaced", false);
+      return { ok: false, error: "capture_cancelled" };
+    }
     for (const track of session.stream.getTracks()) {
       track.addEventListener("ended", () => stopCapture(session, "stream_ended", true), { once: true });
     }
@@ -73,7 +82,13 @@ function publish(session: CaptureSession): void {
   const snapshot = session.analyzer.snapshot;
   snapshot.beatPulse ||= session.pendingBeatPulse;
   session.pendingBeatPulse = false;
-  void chrome.runtime.sendMessage({ type: "offscreen_features", captureId: session.id, features: snapshot }).catch(() => undefined);
+  const now = Date.now();
+  const audioState = session.context?.state !== "running" ? "suspended"
+    : session.lastPcmAt === undefined || now - session.lastPcmAt > 3_000
+      ? now - session.startedAt < 3_000 ? "starting" : "no_frames"
+      : snapshot.energy01 < 0.005 ? "silent" : "analyzing";
+  const features = audioState === "no_frames" || audioState === "suspended" ? inactiveFeatures() : snapshot;
+  void chrome.runtime.sendMessage({ type: "offscreen_features", captureId: session.id, features, audioState }).catch(() => undefined);
 }
 
 function stopCapture(session: CaptureSession, reason: CaptureStopReason, notify: boolean): void {

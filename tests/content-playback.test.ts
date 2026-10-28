@@ -27,7 +27,8 @@ beforeEach(() => {
   document.title = "Private page title";
   sendMessage = vi.fn().mockResolvedValue(undefined);
   metadata = { metadata: null, playbackState: "none" };
-  vi.stubGlobal("chrome", { runtime: { sendMessage, onMessage: { addListener: vi.fn(), removeListener: vi.fn() } } });
+  vi.stubGlobal("chrome", { runtime: { id: "extension", getURL: (path: string) => `chrome-extension://extension/${path}`,
+    sendMessage, onMessage: { addListener: vi.fn(), removeListener: vi.fn() } } });
   vi.stubGlobal("navigator", { mediaSession: metadata });
   windowListeners = vi.spyOn(window, "addEventListener");
 });
@@ -43,6 +44,20 @@ afterEach(() => {
 });
 
 describe("content playback ownership", () => {
+  it("accepts reminder control only from the owning extension and removes it on cleanup", async () => {
+    await load();
+    const listener = vi.mocked(chrome.runtime.onMessage.addListener).mock.calls.at(-1)![0];
+    const prompt = () => Array.from(document.documentElement.children).find(element => element.shadowRoot);
+    listener({ type: "beat_sync_prompt", show: true }, { id: "foreign" }, vi.fn());
+    expect(prompt()).toBeUndefined();
+    listener({ type: "beat_sync_prompt", show: true }, { id: "extension", tab: { id: 4 } } as chrome.runtime.MessageSender, vi.fn());
+    expect(prompt()).toBeUndefined();
+    listener({ type: "beat_sync_prompt", show: true }, { id: "extension", url: "chrome-extension://extension/assets/background.js" }, vi.fn());
+    expect(prompt()?.shadowRoot?.textContent).toContain("Want to enable Beat Sync?");
+    window.dispatchEvent(new Event("pagehide"));
+    expect(prompt()).toBeUndefined();
+  });
+
   it("detects playback from a second media element without a DOM mutation", async () => {
     const first = media();
     const second = media();

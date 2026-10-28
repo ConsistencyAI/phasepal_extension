@@ -87,6 +87,8 @@ export interface FeatureSnapshot {
 }
 
 export interface PopupState {
+  captureAudioState?: "starting" | "no_frames" | "suspended" | "silent" | "analyzing";
+  autoBeatSync: boolean;
   supported: boolean;
   customSites: string[];
   provider?: MusicProvider;

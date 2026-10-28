@@ -9,11 +9,14 @@ beforeEach(async () => {
   vi.resetModules();
   vi.useFakeTimers();
   document.body.innerHTML = new DOMParser().parseFromString(readFileSync("src/popup.html", "utf8"), "text/html").body.innerHTML;
-  popupState = { supported: false, customSites: [], phasePalConnected: true, danceToMusicEnabled: true,
+  popupState = { autoBeatSync: false, supported: false, customSites: [], phasePalConnected: true, danceToMusicEnabled: true,
     playing: false, captureActive: false, beatConfidence01: 0, bpm: 0, errorCode: "none" };
   request = vi.fn().mockResolvedValue(true);
   sendMessage = vi.fn(async message => {
     if (message.type === "get_popup_state") return { ...popupState };
+    if (message.type === "set_auto_beat_sync") popupState.autoBeatSync = message.enabled;
+    if (message.type === "begin_capture") popupState.captureActive = true;
+    if (message.type === "stop_capture") popupState.captureActive = false;
     if (message.type === "add_custom_site") {
       popupState = { ...popupState, supported: true, provider: "custom_site", customSites: [message.origin] };
     }
@@ -33,6 +36,50 @@ async function addWebsite() {
   document.getElementById("site-form")!.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
   await vi.advanceTimersByTimeAsync(0);
 }
+
+it("saves Auto Beat Sync and retains its checked state on refresh without capturing", async () => {
+  const toggle = document.getElementById("auto-beat-sync") as HTMLInputElement;
+  toggle.checked = true;
+  toggle.dispatchEvent(new Event("change"));
+  await vi.advanceTimersByTimeAsync(500);
+  expect(sendMessage).toHaveBeenCalledWith({ type: "set_auto_beat_sync", enabled: true });
+  expect(toggle.checked).toBe(true);
+  expect(sendMessage.mock.calls.some(([message]) => message.type === "begin_capture")).toBe(false);
+});
+
+it("starts saved Auto Beat Sync once and changes Enable to Stop without restarting after Stop", async () => {
+  popupState = { ...popupState, autoBeatSync: true, supported: true, provider: "custom_site", customSites: ["https://radio.example"] };
+  await vi.advanceTimersByTimeAsync(500);
+  expect(document.getElementById("button-label")?.textContent).toBe("Stop Beat Sync");
+  expect(sendMessage.mock.calls.filter(([message]) => message.type === "begin_capture")).toHaveLength(1);
+  document.getElementById("capture-button")!.click();
+  await vi.advanceTimersByTimeAsync(1_000);
+  expect(document.getElementById("button-label")?.textContent).toBe("Enable Beat Sync");
+  expect(sendMessage.mock.calls.filter(([message]) => message.type === "begin_capture")).toHaveLength(1);
+});
+
+it("shows Stop for existing capture and never requests a second stream", async () => {
+  popupState = { ...popupState, autoBeatSync: true, captureActive: true };
+  await vi.advanceTimersByTimeAsync(1_000);
+  expect(document.getElementById("button-label")?.textContent).toBe("Stop Beat Sync");
+  expect(chrome.tabCapture.getMediaStreamId).not.toHaveBeenCalled();
+});
+
+it("does not repeat a denied automatic capture request on popup polling", async () => {
+  vi.mocked(chrome.tabCapture.getMediaStreamId).mockRejectedValue(new Error("Capture needs a new click."));
+  popupState = { ...popupState, autoBeatSync: true, supported: true, provider: "custom_site", customSites: ["https://radio.example"] };
+  await vi.advanceTimersByTimeAsync(6_000);
+  expect(chrome.tabCapture.getMediaStreamId).toHaveBeenCalledOnce();
+  expect(sendMessage.mock.calls.some(([message]) => message.type === "begin_capture")).toBe(false);
+});
+
+it.each(["no_frames", "suspended"] as const)("explains %s audio instead of displaying a beat-lock wait", async captureAudioState => {
+  popupState = { ...popupState, captureActive: true, captureAudioState };
+  await vi.advanceTimersByTimeAsync(500);
+  expect(document.getElementById("status-title")?.textContent).toBe("Waiting for tab audio");
+  expect(document.getElementById("status-detail")?.textContent).toContain("not receiving samples");
+  expect((document.getElementById("capture-button") as HTMLButtonElement).disabled).toBe(false);
+});
 
 it("adds an exact website, enables explicit capture without DOM playback, then removes it", async () => {
   await addWebsite();

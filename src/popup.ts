@@ -11,9 +11,21 @@ const bpmLabel = requireElement("bpm");
 const confidenceLabel = requireElement("confidence");
 const button = requireElement("capture-button") as HTMLButtonElement;
 const buttonLabel = requireElement("button-label");
+const autoSync = requireElement("auto-beat-sync") as HTMLInputElement;
+let preferencePending = false;
+autoSync.addEventListener("change", async () => {
+  preferencePending = true;
+  autoSync.disabled = true;
+  try {
+    const reply = await chrome.runtime.sendMessage({ type: "set_auto_beat_sync", enabled: autoSync.checked });
+    if (!reply?.ok) showTransientError("Could not save Auto Beat Sync. Try again.");
+  } catch { showTransientError("Could not save Auto Beat Sync. Try again."); }
+  finally { preferencePending = false; autoSync.disabled = false; await refresh(); }
+});
 requireElement("supported-sites").textContent = MUSIC_PROVIDERS.map(provider => provider.name).join(" · ");
 let state: PopupState | undefined;
 let actionPending = false;
+let autoStartAttempted = false;
 let transientError = "";
 let transientErrorUntil = 0;
 let siteActionPending = false;
@@ -58,8 +70,11 @@ void refresh();
 const refreshTimer = window.setInterval(() => void refresh(), 500);
 window.addEventListener("unload", () => clearInterval(refreshTimer), { once: true });
 
-button.addEventListener("click", async () => {
+button.addEventListener("click", () => { void toggleCapture(); });
+
+async function toggleCapture(): Promise<void> {
   if (!state || actionPending) return;
+  autoStartAttempted = true;
   actionPending = true;
   try {
     transientError = "";
@@ -89,7 +104,7 @@ button.addEventListener("click", async () => {
     actionPending = false;
     await refresh();
   }
-});
+}
 
 async function refresh(): Promise<void> {
   try {
@@ -99,6 +114,13 @@ async function refresh(): Promise<void> {
       return;
     }
     render(state);
+    // Opening the extension is the Chrome invocation. Never retry capture from
+    // polling, a page message, or after a user Stop in this popup session.
+    if (!autoStartAttempted && !actionPending && state.autoBeatSync && !state.captureActive
+      && state.supported && state.phasePalConnected && state.danceToMusicEnabled
+      && state.errorCode === "none" && (state.playing || state.provider === "custom_site")) {
+      void toggleCapture();
+    }
   } catch {
     renderError("The extension service is not ready.");
   } finally {
@@ -113,6 +135,7 @@ function showTransientError(detail: string): void {
 }
 
 function render(next: PopupState): void {
+  if (!preferencePending) autoSync.checked = next.autoBeatSync === true;
   renderCustomSites(next.customSites ?? []);
   statusDot.className = "status-dot";
   providerLabel.textContent = providerName(next.provider);
@@ -123,6 +146,20 @@ function render(next: PopupState): void {
   confidenceLabel.textContent = next.captureActive ? `${Math.round(next.beatConfidence01 * 100)}%` : "—";
 
   if (next.captureActive) {
+    if (next.captureAudioState === "no_frames" || next.captureAudioState === "suspended") {
+      statusDot.classList.add("warning");
+      statusTitle.textContent = "Waiting for tab audio";
+      statusDetail.textContent = "Audio analysis is not receiving samples. Stop Beat Sync, then enable it again on the playing tab.";
+      button.disabled = false;
+      return;
+    }
+    if (next.captureAudioState === "silent") {
+      statusDot.classList.add("warning");
+      statusTitle.textContent = next.playing ? "Captured audio is silent" : "Paused — Beat Sync stays ready";
+      statusDetail.textContent = "Play music in the captured tab. BPM and beat lock need audible rhythm.";
+      button.disabled = false;
+      return;
+    }
     statusDot.classList.add(next.beatConfidence01 >= 0.55 ? "active" : "warning");
     statusTitle.textContent = next.beatConfidence01 >= 0.55 ? "Beat sync active" : "Listening for the beat";
     statusDetail.textContent = next.beatConfidence01 >= 0.55
@@ -140,7 +177,7 @@ function render(next: PopupState): void {
   if (!next.phasePalConnected) {
     statusDot.classList.add("warning");
     statusTitle.textContent = "Phase Pal is unavailable";
-    statusDetail.textContent = "Open Phase Pal and check the native host setup.";
+    statusDetail.textContent = "Open Phase Pal and enable Dance to Music in Settings → Avatar → Behavior.";
     button.disabled = true;
     return;
   }

@@ -76,7 +76,10 @@ export class MusicFeatureAnalyzer {
     const dynamicBaseline = Math.max(this.settings.energyFloor, baseline);
     const rise = Math.max(rms - dynamicBaseline, rms - previousEnergy);
     const onsetStrength = rise > 0 && rms >= this.settings.minimumOnsetEnergy
-      ? rise / dynamicBaseline
+      // Sensitivity is an energy ratio (1.25 means 25% above the recent bed).
+      // Comparing the rise itself required 125% above the bed and missed music
+      // with sustained instruments even when its drum pattern was regular.
+      ? rms / dynamicBaseline
       : 0;
     const beatPulse = this.tryAddOnset(now, onsetStrength);
     this.energyFrames.push({ time: now, energy: rms });
