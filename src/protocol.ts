@@ -14,7 +14,7 @@ export type CaptureStopReason =
   | "replaced";
 
 interface MessageBase {
-  protocolVersion: typeof PROTOCOL_VERSION;
+  protocolVersion: 1 | 2;
   sequence: number;
   emittedAtUnixMs: number;
   browserSessionId: string;
@@ -52,7 +52,31 @@ export interface CaptureStoppedMessage extends MessageBase {
   reason: CaptureStopReason;
 }
 
+export interface LyricsPlaybackFields {
+  provider: MusicProvider;
+  sourceId: string;
+  trackId: string;
+  title: string;
+  artist: string;
+  durationMs: number;
+  positionMs: number;
+  playbackRate: number;
+  playing: boolean;
+  buffering: boolean;
+  available: boolean;
+}
+
+export interface LyricsPlaybackMessage extends MessageBase, LyricsPlaybackFields {
+  type: "lyrics_playback";
+}
+
+export interface ProviderLyricsUpdate extends LyricsPlaybackFields {
+  type: "provider_lyrics";
+  emittedAtUnixMs: number;
+}
+
 export type ExtensionToHostMessage =
+  | LyricsPlaybackMessage
   | HelloMessage
   | PlaybackStateMessage
   | MusicFeaturesMessage
@@ -61,6 +85,7 @@ export type ExtensionToHostMessage =
 export interface HostStatusMessage {
   type: "host_status";
   protocolVersion: number;
+  lyricsRequested?: boolean;
   phasePalConnected: boolean;
   danceToMusicEnabled: boolean;
   errorCode: "none" | "phasepal_unavailable" | "protocol_mismatch" | "busy" | "invalid_message";

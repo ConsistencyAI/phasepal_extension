@@ -9,8 +9,10 @@ import {
   type PlaybackStateMessage,
   type PopupState,
   type ProviderPlaybackUpdate,
+  type ProviderLyricsUpdate,
   providerForUrl
 } from "./protocol";
+import { isHostStatus, isLyricsUpdate, isPlaybackUpdate } from "./message-validation";
 import { selectMusicSource } from "./source-selection";
 import { CustomSiteRegistry, customSiteOrigin, customSitePattern } from "./custom-sites";
 
@@ -23,6 +25,7 @@ interface TabState {
   hasTimeline: boolean;
   lastStartedAt: number;
   siteOrigin?: string;
+  lyrics?: ProviderLyricsUpdate;
 }
 
 const browserSessionId = crypto.randomUUID();
@@ -32,6 +35,11 @@ const customSites = new CustomSiteRegistry();
 void customSites.ready.catch(() => undefined);
 let nativePort: chrome.runtime.Port | undefined;
 let sequence = 0;
+let wireVersion: 1 | 2 = 2;
+let previousLyricsRequest = false;
+let lyricsRequestGeneration = 0;
+let lastLyricsSample = "";
+let lastLyricTabId: number | undefined;
 let capturedTabId: number | undefined;
 let pendingTabId: number | undefined;
 let captureId: string | undefined;
@@ -102,22 +110,35 @@ chrome.runtime.onMessage.addListener((message: unknown, sender, sendResponse) =>
     return true;
   }
   if (candidate.type === "provider_playback" && sender.tab?.id !== undefined) {
-    if ((sender.frameId ?? 0) !== 0 ||
-      ![candidate.playing, candidate.hasTitle, candidate.hasArtist, candidate.hasTimeline].every(value => typeof value === "boolean") ||
-      typeof candidate.emittedAtUnixMs !== "number" || !Number.isFinite(candidate.emittedAtUnixMs)) return false;
+    if ((sender.frameId ?? 0) !== 0 || (sender.origin && sender.origin !== customSiteOrigin(sender.url))) return false;
     const tabId = sender.tab.id;
     const document = tabDocuments.get(tabId) ?? {};
     tabDocuments.set(tabId, document);
     void resolvedProvider(sender.url).then(provider => {
-      if (!provider || candidate.provider !== provider || tabDocuments.get(tabId) !== document) { sendResponse({ ok: false }); return; }
+      if (!provider || !isPlaybackUpdate(candidate, sender, provider) || tabDocuments.get(tabId) !== document) { sendResponse({ ok: false }); return; }
       updateProvider(tabId, candidate as unknown as ProviderPlaybackUpdate, customSiteOrigin(sender.url));
       void preferencesReady.then(() => {
         if (tabDocuments.get(tabId) !== document) return;
         return chrome.tabs.sendMessage(tabId, { type: "beat_sync_prompt", show: shouldShowPrompt() }).catch(() => undefined);
       });
-      sendResponse({ ok: true });
+      sendResponse({ ok: true, lyricsRequested: wantsLyrics() });
     }).catch(() => sendResponse({ ok: false }));
     return true;
+  }
+  if (candidate.type === "provider_lyrics" && sender.tab?.id !== undefined && (sender.frameId ?? 0) === 0) {
+    if (!wantsLyrics()) return false;
+    const tabId = sender.tab.id;
+    const document = tabDocuments.get(tabId);
+    const requestGeneration = lyricsRequestGeneration;
+    void resolvedProvider(sender.url).then(provider => {
+      if (requestGeneration !== lyricsRequestGeneration || !wantsLyrics() || !provider || !document || tabDocuments.get(tabId) !== document ||
+          !isLyricsUpdate(candidate, sender, provider)) return;
+      const tab = tabs.get(tabId);
+      if (!tab || tab.provider !== provider) return;
+      tab.lyrics = candidate as unknown as ProviderLyricsUpdate;
+      publishSelectedLyrics();
+    }).catch(() => undefined);
+    return false;
   }
   if (candidate.type === "provider_unloaded" && sender.tab?.id !== undefined && (sender.frameId ?? 0) === 0) {
     tabDocuments.delete(sender.tab.id);
@@ -200,6 +221,7 @@ function updateProvider(tabId: number, update: ProviderPlaybackUpdate, siteOrigi
     hasTitle: update.hasTitle,
     hasArtist: update.hasArtist,
     hasTimeline: update.hasTimeline,
+    lyrics: wantsLyrics() ? previous?.lyrics : undefined,
     lastStartedAt: update.playing && !previous?.playing ? update.emittedAtUnixMs : previous?.lastStartedAt ?? 0
   });
   if (capturedTabId === tabId || pendingTabId === tabId) capturedProvider = update.provider;
@@ -220,6 +242,7 @@ function publishSelectedPlayback(): void {
   if (!selected && !fallbackProvider) {
     sendNative({ ...baseMessage(), type: "playback_state", provider: "custom_site", playing: false,
       hasTitle: false, hasArtist: false, hasTimeline: false, captureActive: false });
+    publishSelectedLyrics();
     return;
   }
   const message: PlaybackStateMessage = {
@@ -233,6 +256,7 @@ function publishSelectedPlayback(): void {
     captureActive: capturedTabId !== undefined && capturedTabId === selected?.tabId
   };
   sendNative(message);
+  publishSelectedLyrics();
 }
 
 async function beginCapture(tabId: number, streamId: string): Promise<{ ok: boolean; error?: string }> {
@@ -335,7 +359,7 @@ function receiveFeatures(features: FeatureSnapshot): void {
 
 function baseMessage() {
   return {
-    protocolVersion: PROTOCOL_VERSION,
+    protocolVersion: wireVersion,
     sequence: ++sequence,
     emittedAtUnixMs: Date.now(),
     browserSessionId
@@ -347,11 +371,20 @@ function ensureNativePort(): void {
   try {
     const port = chrome.runtime.connectNative(NATIVE_HOST_NAME);
     nativePort = port;
+    wireVersion = 2;
+    hostStatus = { ...hostStatus, lyricsRequested: false };
     port.onMessage.addListener(message => {
       if (nativePort !== port) return;
-      if ((message as HostStatusMessage).type === "host_status") {
+      if (isHostStatus(message)) {
         const wasReady = bridgeReady();
-        hostStatus = message as HostStatusMessage;
+        hostStatus = message;
+        if (message.errorCode === "protocol_mismatch" && wireVersion === 2) {
+          wireVersion = 1;
+          syncLyricsRequest();
+          sendNative({ ...baseMessage(), type: "hello", extensionVersion: chrome.runtime.getManifest().version });
+          return;
+        }
+        syncLyricsRequest();
         if (!bridgeReady()) void stopCapture("user");
         if (wasReady !== bridgeReady()) updatePrompts();
       }
@@ -359,7 +392,8 @@ function ensureNativePort(): void {
     port.onDisconnect.addListener(() => {
       if (nativePort !== port) return;
       nativePort = undefined;
-      hostStatus = { ...hostStatus, phasePalConnected: false, errorCode: "phasepal_unavailable" };
+      hostStatus = { ...hostStatus, lyricsRequested: false, phasePalConnected: false, danceToMusicEnabled: false, errorCode: "phasepal_unavailable" };
+      syncLyricsRequest();
       void stopCapture("user");
       updatePrompts();
       scheduleReconnect();
@@ -486,4 +520,43 @@ function inactiveFeatureState(): FeatureSnapshot {
     onsetDensity01: 0,
     sectionIntensity: "unknown"
   };
+}
+
+function wantsLyrics(): boolean {
+  return wireVersion === 2 && hostStatus.protocolVersion === 2 && hostStatus.phasePalConnected
+    && hostStatus.danceToMusicEnabled && hostStatus.lyricsRequested === true;
+}
+
+function syncLyricsRequest(): void {
+  const enabled = wantsLyrics();
+  if (enabled === previousLyricsRequest) return;
+  previousLyricsRequest = enabled;
+  ++lyricsRequestGeneration;
+  lastLyricsSample = "";
+  if (!enabled) lastLyricTabId = undefined;
+  for (const tab of tabs.values()) {
+    if (!enabled) tab.lyrics = undefined;
+    void chrome.tabs.sendMessage(tab.tabId, { type: "lyrics_requested", enabled }).catch(() => undefined);
+  }
+}
+
+function publishSelectedLyrics(): void {
+  if (!wantsLyrics()) return;
+  const active = selectedTab();
+  if (active) lastLyricTabId = active.tabId;
+  const selected = active ?? (lastLyricTabId !== undefined ? tabs.get(lastLyricTabId) : undefined);
+  const lyrics = selected ? tabs.get(selected.tabId)?.lyrics : undefined;
+  if (lyrics && Date.now() - lyrics.emittedAtUnixMs <= 3500) {
+    const sample = [lyrics.sourceId, lyrics.trackId, lyrics.emittedAtUnixMs].join(":");
+    if (sample === lastLyricsSample) return;
+    lastLyricsSample = sample;
+    const { type: _type, emittedAtUnixMs, ...fields } = lyrics;
+    sendNative({ ...baseMessage(), ...fields, emittedAtUnixMs, type: "lyrics_playback" });
+  } else {
+    if (lastLyricsSample === "unavailable") return;
+    lastLyricsSample = "unavailable";
+    sendNative({ ...baseMessage(), type: "lyrics_playback", provider: selected?.provider ?? capturedProvider ?? "spotify_web",
+      sourceId: "unavailable", trackId: "unavailable", title: "", artist: "", durationMs: 0,
+      positionMs: 0, playbackRate: 1, playing: false, buffering: false, available: false });
+  }
 }

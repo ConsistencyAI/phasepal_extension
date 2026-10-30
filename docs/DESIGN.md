@@ -17,14 +17,17 @@
 
 ## Privacy boundary
 
-The page converts metadata to `hasTitle` and `hasArtist` before it sends a
-message. The extension and host reject fields outside the fixed protocol shape.
-They do not send or store titles, artists, URLs, page titles, page text, browser
+Default detection converts metadata to `hasTitle` and `hasArtist` before it sends
+a message. Optional lyric frames use the separate v2 schema described below. The extension and host reject fields outside the fixed protocol shape.
+In the default detection mode they do not send or store titles, artists, URLs, page titles, page text, browser
 history, or PCM audio.
 
 ## Trust boundary
 
-- Chrome can start capture only from the popup user action.
+- Chrome permits capture only for a tab where the user has invoked the extension.
+- Auto Beat Sync is off by default and saved in local extension storage. It does
+  not bypass Chrome permission rules. Failed requests wait for a new popup click.
+- Preference and capture commands are accepted only from the extension popup.
 - The native host accepts messages only from the stable development extension ID.
 - Phase Pal listens only on `127.0.0.1` and uses an operating-system-selected port.
 - Each Phase Pal run creates a new 256-bit token in an owner-only descriptor.
@@ -61,3 +64,20 @@ intensity values are audio features, not verified musical-section recognition.
 V1 supports Chrome 116 or newer on Windows and macOS. Native-host installation is
 developer-managed. Signing, store release, packaged installers,
 selected-text speech, and browser control are outside this milestone.
+
+## Submission hardening
+
+The worker accepts playback only from the extension's content script in a supported top-level HTTPS frame. Playback and audio feature payloads have exact field and value checks. The offscreen page accepts capture commands only from the background worker. It closes streams that arrive after a stop. A stop request does not wait for a pending Chrome audio request. Tab loading/discard and unsupported navigation invalidate capture even if the content script does not send an unload message. A document restored from Back/Forward restarts its observers and playback heartbeat.
+
+## Optional timed lyrics (27 October 2026)
+
+See [LYRICS.md](LYRICS.md). Version 1 detection frames remain unchanged. Updated
+components negotiate version 2 browser frames by sending a v2 `hello`. The
+native transport descriptor and `bridge_hello` remain version 1 so a new host
+can connect to an old player. A v2 receiver returns v2 status with the required
+`lyricsRequested` Boolean; a v1 status has no extra field. The extension falls
+back to a v1 hello if the host or app returns `protocol_mismatch`. Until a v2
+app confirms the lyric request, no song text is collected or transmitted.
+
+The receiver validates current session, sequence, bounds, timestamps and app
+opt-in. Lyric data does not enter the beat snapshot, audio worklet or analytics.

@@ -11,8 +11,12 @@ in a compatible local Phase Pal desktop app.
 
 Exchange fixed playback flags and optional numeric rhythm features with the
 installed Phase Pal native host, which forwards them to the authenticated local
-desktop app. The app is required for the extension's single purpose. No page text,
-URLs, song names, raw audio or transcripts are sent through this protocol.
+desktop app. The app is required for the extension's single purpose. Optional
+version 2 lyric reports, off by default in Phase Pal, also send title, artist,
+duration, position, speed, playback flags, and random source/track IDs only while
+the app requests them. The app sends title and artist to KuGou for timed lyrics
+and caches successful results locally. No URLs, unrelated page text, raw audio or
+transcripts are sent through this protocol. See docs/LYRICS.md.
 
 ### tabCapture
 
@@ -49,8 +53,9 @@ registrations also store the local site list. Removal unregisters the monitor.
 Read media playing/paused state and metadata-presence booleans on the 35 named
 HTTPS music-player hosts. This provides automatic playback reporting to the local
 app without requiring audio capture. Host access also lets the popup identify the
-active supported player. Only fixed provider IDs and booleans leave the extension
-through the local native protocol; account credentials and page text do not.
+active supported player. Default detection sends fixed provider IDs and booleans.
+When the app requests lyrics, it also receives the song details listed above.
+Account credentials and unrelated page text do not leave through this protocol.
 
 ### Optional HTTP(S) host permissions
 
@@ -71,13 +76,14 @@ downloaded or executed as extension JavaScript.
 
 Do not equate local processing with no data access. The extension accesses:
 
-- Website content: selected-tab audio, media playback, and metadata presence.
+- Website content: selected-tab audio, media playback, metadata presence, and optional song details.
 - Browsing-related information: active tab addresses for provider recognition and
   user-entered custom origins saved locally. It does not read the history database.
 - User activity: media play/pause and the user's capture controls.
 
 There is no extension analytics endpoint or off-device upload path. Only the
-disclosed fixed playback and numeric feature fields go to the local desktop app.
+disclosed playback, numeric features, and optional lyric fields go to the local
+desktop app. The app separately contacts KuGou when lyrics are enabled.
 No personal contact, health, payment, financial, precise-location, authentication,
 or private message data is requested by the extension feature. A random local
 service-session ID is not an advertising identifier.

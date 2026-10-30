@@ -22,15 +22,17 @@ Do not describe managed or host tests as browser or Phase Pal runtime verificati
 This repository does not require a CI workflow.
 
 Preserve the fixed message schema and local data boundary. Do not add audio,
-titles, artists, URLs, or page content to messages, storage, or logs. New
+URLs, or unrelated page content to messages, storage, or logs. The optional v2
+lyrics path is a narrow exception for title, artist and media timing only while
+the app requests lyrics; see [LYRICS.md](docs/LYRICS.md). New
 permissions, dependencies, telemetry, and network endpoints need an explicit
 reason and privacy review. Use behavior tests for meaningful changes and extend
 existing tests where possible.
 
 The custom-site feature is a narrow exception for locally saved user-approved
 HTTP(S) origins. Keep those addresses inside Chrome's extension settings and
-internal control messages; native messages still carry only `custom_site` and
-the fixed numeric/boolean protocol. Never save credentials, paths or query strings.
+internal control messages; native messages carry only `custom_site` and
+the fixed playback/feature fields, plus the optional v2 lyric fields when requested. Never save credentials, paths or query strings.
 
 ## Runtime release checks
 

@@ -37,9 +37,11 @@ Custom sites are optional and use separate per-site access requests.
 YOUR AUDIO AND DATA
 Beat Sync captures only the tab you choose after you click the popup control.
 Audio remains on your device and the tab stays audible. The bridge sends fixed
-playback flags and rhythm values to the local Phase Pal app. It does not send song
-names, artist names, URLs, page text, browser history, recordings, or raw audio to
-the app. It does not request microphone access, transcribe speech, or upload audio.
+playback flags and rhythm values to the local Phase Pal app. Optional Show lyrics
+in the app also sends song details and timing through the local bridge. The app
+uses KuGou for timed lyrics and caches successful results locally. Lyrics are off
+by default and stop when the app no longer requests them. URLs, unrelated page
+text, browser history, recordings, and raw audio are not sent to the app. It does not request microphone access, transcribe speech, or upload audio.
 Custom website origins are saved locally in Chrome; paths and query strings are
 not saved. The extension has no advertising, analytics, or remote upload endpoint.
 

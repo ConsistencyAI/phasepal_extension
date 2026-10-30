@@ -60,7 +60,8 @@ pub struct MessageValidator {
 impl MessageValidator {
     pub fn validate(&mut self, value: &Value) -> Result<(), &'static str> {
         let object = value.as_object().ok_or("invalid_message")?;
-        if object.get("protocolVersion").and_then(Value::as_u64) != Some(PROTOCOL_VERSION) {
+        let version = object.get("protocolVersion").and_then(Value::as_u64);
+        if !matches!(version, Some(1 | 2)) {
             return Err("protocol_mismatch");
         }
         let message_type = object
@@ -82,6 +83,7 @@ impl MessageValidator {
                 bounded_string(object.get("extensionVersion"), 32)?;
             }
             "playback_state" => validate_playback(value)?,
+            "lyrics_playback" if version == Some(2) => validate_lyrics(value)?,
             "music_features" => validate_features(value)?,
             "capture_stopped" => validate_capture_stop(value)?,
             _ => return Err("invalid_message"),
@@ -378,7 +380,7 @@ fn validate_host_status(value: &Value) -> io::Result<()> {
     let object = value
         .as_object()
         .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidData, "invalid host status"))?;
-    let expected: HashSet<&str> = [
+    let mut expected: HashSet<&str> = [
         "type",
         "protocolVersion",
         "phasePalConnected",
@@ -387,6 +389,13 @@ fn validate_host_status(value: &Value) -> io::Result<()> {
     ]
     .into_iter()
     .collect();
+    let version = object.get("protocolVersion").and_then(Value::as_u64);
+    if version == Some(2) {
+        expected.insert("lyricsRequested");
+        if object.get("lyricsRequested").and_then(Value::as_bool).is_none() {
+            return Err(io::Error::new(io::ErrorKind::InvalidData, "invalid lyric status"));
+        }
+    }
     let keys: HashSet<&str> = object.keys().map(String::as_str).collect();
     let error_code_is_valid = matches!(
         object.get("errorCode").and_then(Value::as_str),
@@ -394,7 +403,7 @@ fn validate_host_status(value: &Value) -> io::Result<()> {
     );
     if keys != expected
         || object.get("type").and_then(Value::as_str) != Some("host_status")
-        || object.get("protocolVersion").and_then(Value::as_u64) != Some(PROTOCOL_VERSION)
+        || !matches!(version, Some(1 | 2))
         || object
             .get("phasePalConnected")
             .and_then(Value::as_bool)
@@ -444,6 +453,7 @@ fn validate_keys<'a>(
             "onsetDensity01",
             "sectionIntensity",
         ],
+        "lyrics_playback" => &["provider", "sourceId", "trackId", "title", "artist", "durationMs", "positionMs", "playbackRate", "playing", "buffering", "available"],
         "capture_stopped" => &["reason"],
         _ => return Err("invalid_message"),
     };
@@ -518,6 +528,31 @@ fn validate_playback(value: &Value) -> Result<(), &'static str> {
             .and_then(Value::as_bool)
             .ok_or("invalid_message")?;
     }
+    Ok(())
+}
+
+fn validate_lyrics(value: &Value) -> Result<(), &'static str> {
+    let object = value.as_object().ok_or("invalid_message")?;
+    validate_provider(object.get("provider"))?;
+    bounded_string(object.get("sourceId"), 128)?;
+    bounded_string(object.get("trackId"), 128)?;
+    for key in ["title", "artist"] {
+        let text = object.get(key).and_then(Value::as_str).ok_or("invalid_message")?;
+        if text.chars().count() > 256 { return Err("invalid_message"); }
+    }
+    for key in ["playing", "buffering", "available"] {
+        object.get(key).and_then(Value::as_bool).ok_or("invalid_message")?;
+    }
+    for key in ["durationMs", "positionMs"] {
+        let number = object.get(key).and_then(Value::as_f64).ok_or("invalid_message")?;
+        if !number.is_finite() || !(0.0..=86_400_000.0).contains(&number) { return Err("invalid_message"); }
+    }
+    let rate = object.get("playbackRate").and_then(Value::as_f64).ok_or("invalid_message")?;
+    if !rate.is_finite() || !(0.1..=16.0).contains(&rate) { return Err("invalid_message"); }
+    if value["positionMs"].as_f64() > value["durationMs"].as_f64() { return Err("invalid_message"); }
+    if value["available"] == true && (value["durationMs"].as_f64().unwrap_or(0.0) <= 0.0
+        || value["title"].as_str().unwrap_or("").trim().is_empty()
+        || value["artist"].as_str().unwrap_or("").trim().is_empty()) { return Err("invalid_message"); }
     Ok(())
 }
 
@@ -823,4 +858,37 @@ mod tests {
         assert_eq!(status["errorCode"], "busy");
         assert!(read_native_message(&mut framed).unwrap().is_none());
     }
+    #[test]
+    fn lyric_packets_require_v2_and_bounded_fields() {
+        let packet = json!({"type":"lyrics_playback", "protocolVersion":2, "sequence":1,
+            "emittedAtUnixMs":1000, "browserSessionId":"session", "provider":"spotify_web",
+            "sourceId":"document", "trackId":"track", "title":"Example", "artist":"Artist",
+            "durationMs":60000, "positionMs":12000, "playbackRate":1.0,
+            "playing":true, "buffering":false, "available":true});
+        assert!(MessageValidator::default().validate(&packet).is_ok());
+        for field in ["title", "positionMs", "sourceId", "buffering"] {
+            let mut invalid = packet.clone();
+            invalid.as_object_mut().unwrap().remove(field);
+            assert!(MessageValidator::default().validate(&invalid).is_err());
+        }
+        for (field, bad) in [("protocolVersion", json!(1)), ("title", json!("x".repeat(257))),
+            ("positionMs", json!(60001)), ("playbackRate", json!(0)), ("url", json!("https://example.com"))] {
+            let mut invalid = packet.clone(); invalid[field] = bad;
+            assert!(MessageValidator::default().validate(&invalid).is_err());
+        }
+    }
+
+    #[test]
+    fn lyric_status_is_optional_only_for_legacy_protocol() {
+        let legacy = json!({"type":"host_status", "protocolVersion":1, "phasePalConnected":true,
+            "danceToMusicEnabled":true, "errorCode":"none"});
+        assert!(validate_host_status(&legacy).is_ok());
+        let mut modern = legacy.clone(); modern["protocolVersion"] = json!(2);
+        assert!(validate_host_status(&modern).is_err());
+        modern["lyricsRequested"] = json!(false);
+        assert!(validate_host_status(&modern).is_ok());
+        modern["protocolVersion"] = json!(1);
+        assert!(validate_host_status(&modern).is_err());
+    }
+
 }

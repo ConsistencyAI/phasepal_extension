@@ -46,8 +46,11 @@ See [Chrome's optional permission API](https://developer.chrome.com/docs/extensi
 and [dynamic content-script API](https://developer.chrome.com/docs/extensions/reference/api/scripting).
 
 Saved origins stay inside the extension. The native bridge and Phase Pal receive
-only the fixed `custom_site` provider ID, booleans, timing, and rhythm values.
-They receive no custom URL, song text, raw audio, or transcript. An updated
+the fixed `custom_site` provider ID, booleans, timing, and rhythm values.
+Optional v2 lyrics, off by default in Phase Pal, also report song details from
+MediaSession only while the app requests them and a reliable media timeline is
+available. See [LYRICS.md](LYRICS.md). Neither path sends a custom URL, raw audio,
+or transcript. An updated
 Phase Pal app and native host must accept that provider ID. The 18 built-in
 services remain a separate fixed list.
 

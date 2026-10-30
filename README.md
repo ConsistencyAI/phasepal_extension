@@ -32,8 +32,16 @@ user selects **Enable Beat Sync** in the extension popup. Chrome shows this as a
 user-approved tab capture. The extension keeps tab audio audible while it
 calculates energy, tempo, beat phase, and section intensity locally.
 
-The bridge never sends song names, artists, URLs, page titles, page content,
-browser history, or captured PCM audio to Phase Pal.
+Lyrics are optional and off by default in Phase Pal. When **Show lyrics** is
+on and browser music detection is allowed, the updated app requests the song
+title, artist, duration, position, speed, and random document/track IDs. These
+fields travel only through the authenticated local bridge. The app sends the
+title and artist to KuGou for timed lyrics and stores successful results locally.
+Turning the setting off stops song-detail reports. Basic dancing works without
+these details. Website addresses, browser history, unrelated page content, and
+captured PCM audio are never included in lyric messages.
+
+See [Lyrics and privacy](docs/LYRICS.md) for data flow and protocol compatibility.
 
 See [privacy and permissions](docs/PRIVACY.md), [security reporting](SECURITY.md),
 and the [public release review](docs/PUBLIC_RELEASE_REVIEW.md).

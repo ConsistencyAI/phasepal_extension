@@ -9,7 +9,7 @@ The content script reads media playback state on the exact music-player
 hosts in [the site list](SUPPORTED_SITES.md) and on [custom websites](CUSTOM_SITES.md)
 the user adds with Chrome's site access permission. It checks whether title, artist,
 and timeline information exists, and can read explicit MediaSession playback state.
-Actual title and artist text remains in the page. The extension uses tab URLs
+Title and artist text remains in the page unless Show lyrics is enabled in Phase Pal. The extension uses tab URLs
 locally to identify supported sites and tab IDs locally to select playback.
 
 The bridge sends the following to the local native host and Phase Pal:
@@ -20,12 +20,27 @@ The bridge sends the following to the local native host and Phase Pal:
 - During optional capture: energy, beat confidence, estimated tempo and phase,
   beat pulses, onset density, and section intensity.
 - A fixed reason code when capture stops.
+- Only while the app requests lyrics: song title, artist, duration, playback
+  position and speed, pause/buffering flags, and random document/track IDs.
 
 The host reads a local Phase Pal runtime descriptor with a port and session token.
-It uses these to authenticate to `127.0.0.1`. The protocol does not carry song names,
-artist names, URLs, page titles, page text, browser history, or raw audio to Phase
-Pal. Playback on a supported site is treated as music; podcasts and speech can
+It uses these to authenticate to `127.0.0.1`. The default version 1 protocol does not carry song details. Optional version 2
+lyric messages carry only the song details listed above. Neither path carries
+URLs, unrelated page text, browser history, or raw audio to Phase Pal. Playback on a supported site is treated as music; podcasts and speech can
 also trigger it.
+
+## Optional lyrics
+
+Show lyrics is off by default in Phase Pal. The app must request lyric reports
+through a compatible version 2 bridge. Reports stop and retained song details
+are cleared when the setting is off, the app disconnects, or support falls back
+to version 1. Players without reliable media timing report lyrics unavailable.
+
+The app sends the title and artist to KuGou over HTTPS, then uses a recording hash
+and access key to obtain timed lyrics. Successful results are cached locally by
+the app. This lookup has no Phase Pal Cloud requirement. See [LYRICS.md](LYRICS.md)
+for fields, cache bounds, and compatibility. Website addresses and audio are not
+part of lyric messages.
 
 ## Optional audio capture
 
@@ -40,7 +55,7 @@ remove the extension to stop automatic playback detection as well.
 
 | Permission | Purpose |
 | --- | --- |
-| Supported-site host access | Read playback state and metadata presence on the named music-player hosts. |
+| Supported-site host access | Read playback state and metadata presence; read song details only when lyrics are requested. |
 | Optional HTTP(S) host access | Request one exact custom website after the Add website action. |
 | `scripting` | Register and inject playback monitoring only on approved custom websites. |
 | `nativeMessaging` | Exchange fixed messages with the installed local host. |
@@ -71,8 +86,8 @@ transcribe speech or upload audio. Host installation writes
 a native messaging manifest and executable to the user profile, plus a per-user
 registry entry on Windows. Phase Pal owns its separate runtime descriptor.
 
-The source does not define what the Phase Pal application stores or sends after
-receiving a frame. Consult that application's privacy information separately.
+The optional lyric lookup and cache described above are owned by the Phase Pal
+application. Consult the app privacy information for its other data practices.
 Supported websites and Chrome also have their own data practices. Local source
 review does not prove the behavior of a future packaged binary.
 

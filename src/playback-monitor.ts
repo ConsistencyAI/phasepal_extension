@@ -1,8 +1,9 @@
+import type { ProviderLyricsUpdate } from "./protocol";
 import { shouldPublishPlayback } from "./playback-publication";
 import { metadataSelectorsForProvider, type MusicProvider } from "./providers";
 
 /** Observe one document; disposal releases every listener, observer and timer. */
-export function startPlaybackMonitor(provider: MusicProvider, onRejected: () => void): () => void {
+export function startPlaybackMonitor(provider: MusicProvider, onRejected: () => void): (() => void) & { setLyricsRequested(enabled: boolean): void } {
   interface PlaybackUpdate {
     type: "provider_playback";
     provider: MusicProvider;
@@ -14,7 +15,7 @@ export function startPlaybackMonitor(provider: MusicProvider, onRejected: () => 
   }
 
   const mediaElements = new Set<HTMLMediaElement>();
-  const mediaEvents = ["play", "playing", "pause", "ended", "durationchange", "emptied", "loadedmetadata", "loadeddata", "abort", "error"];
+  const mediaEvents = ["play", "playing", "pause", "ended", "durationchange", "emptied", "loadedmetadata", "loadeddata", "abort", "error", "seeking", "seeked", "waiting", "stalled", "ratechange"];
   let currentMedia: HTMLMediaElement | undefined;
   let lastFingerprint = "";
   let heartbeat: number | undefined;
@@ -25,6 +26,12 @@ export function startPlaybackMonitor(provider: MusicProvider, onRejected: () => 
   let usingMediaSession = false;
   const genericProvider = provider !== undefined && metadataSelectorsForProvider(provider) === undefined;
   let active = false;
+  let lyricsRequested = false;
+  let lyricsRequestGeneration = 0;
+  let lyricsHeartbeat: number | undefined;
+  let trackFingerprint = "";
+  let trackId = crypto.randomUUID();
+  const sourceId = crypto.randomUUID();
   const observer = new MutationObserver(records => {
     if (!active) return;
     for (const record of records) {
@@ -57,6 +64,8 @@ export function startPlaybackMonitor(provider: MusicProvider, onRejected: () => 
   function suspend(): void {
     if (!active) return;
     active = false;
+    ++lyricsRequestGeneration;
+    setLyricsRequested(false);
     observer.disconnect();
     for (const event of mediaEvents) document.removeEventListener(event, onMediaEvent, true);
     stopHeartbeat();
@@ -92,6 +101,7 @@ export function startPlaybackMonitor(provider: MusicProvider, onRejected: () => 
     usingMediaSession = genericProvider && eligible.length === 0 && !mediaSessionBlocked && sessionState === "playing" &&
       Boolean(metadata?.title?.trim() || metadata?.artist?.trim());
     publishPlayback(force);
+    publishLyrics();
   }
 
   function publishPlayback(force: boolean): void {
@@ -125,9 +135,15 @@ export function startPlaybackMonitor(provider: MusicProvider, onRejected: () => 
   }
 
   function sendMessage(message: PlaybackUpdate | { type: "provider_unloaded"; provider: MusicProvider | undefined }): void {
+    const requestGeneration = lyricsRequestGeneration;
     try { void chrome.runtime.sendMessage(message).then(reply => {
+      if (active && message.type === "provider_playback" && requestGeneration === lyricsRequestGeneration && typeof reply?.lyricsRequested === "boolean")
+        setLyricsRequested(reply.lyricsRequested);
       if (provider === "custom_site" && reply?.ok === false) onRejected();
-    }).catch(() => { if (provider === "custom_site") onRejected(); }); } catch { /* Extension can reload while a page stays open. */ }
+    }).catch(() => {
+      if (requestGeneration === lyricsRequestGeneration) setLyricsRequested(false);
+      if (provider === "custom_site") onRejected();
+    }); } catch { /* Extension can reload while a page stays open. */ }
   }
 
   function resolveMetadataPresence(musicProvider: MusicProvider, metadata: MediaMetadata | null | undefined): { hasTitle: boolean; hasArtist: boolean } {
@@ -142,9 +158,49 @@ export function startPlaybackMonitor(provider: MusicProvider, onRejected: () => 
     };
   }
 
-  return () => {
+  function setLyricsRequested(enabled: boolean): void {
+    enabled = enabled && active;
+    if (lyricsRequested === enabled) return;
+    lyricsRequested = enabled;
+    if (lyricsHeartbeat !== undefined) window.clearInterval(lyricsHeartbeat);
+    lyricsHeartbeat = undefined;
+    if (enabled) {
+      publishLyrics();
+      lyricsHeartbeat = window.setInterval(publishLyrics, 1_000);
+    } else { trackFingerprint = ""; trackId = crypto.randomUUID(); }
+  }
+
+  function publishLyrics(): void {
+    if (!provider || !active || !lyricsRequested) return;
+    const metadata = navigator.mediaSession?.metadata;
+    const selected = metadataSelectorsForProvider(provider);
+    const title = (metadata?.title || (selected ? document.querySelector(selected.title)?.textContent : "") || "").trim().slice(0, 256);
+    const artist = (metadata?.artist || (selected ? document.querySelector(selected.artist)?.textContent : "") || "").trim().slice(0, 256);
+    const media = currentMedia;
+    const durationMs = media && Number.isFinite(media.duration) && media.duration > 0 ? media.duration * 1000 : 0;
+    const available = Boolean(title && artist && durationMs > 0 && durationMs <= 86_400_000 && media && Number.isFinite(media.currentTime));
+    const fingerprint = [title, artist, durationMs].join("\n");
+    if (fingerprint !== trackFingerprint) { trackFingerprint = fingerprint; trackId = crypto.randomUUID(); }
+    const update: ProviderLyricsUpdate = {
+      type: "provider_lyrics", provider, sourceId, trackId,
+      title: available ? title : "", artist: available ? artist : "",
+      durationMs: available ? durationMs : 0,
+      positionMs: available ? Math.max(0, Math.min(durationMs, media!.currentTime * 1000)) : 0,
+      playbackRate: media && Number.isFinite(media.playbackRate) && media.playbackRate >= 0.1 && media.playbackRate <= 16 ? media.playbackRate : 1,
+      playing: Boolean(media && !media.paused && !media.ended),
+      buffering: Boolean(media && (media.readyState < 3 || media.seeking)),
+      available, emittedAtUnixMs: Date.now()
+    };
+    void chrome.runtime.sendMessage(update).catch(() => undefined);
+  }
+
+  const stop = () => {
     suspend();
     window.removeEventListener("pagehide", suspend);
     window.removeEventListener("pageshow", resume);
   };
+  return Object.assign(stop, { setLyricsRequested: (enabled: boolean) => {
+    ++lyricsRequestGeneration;
+    setLyricsRequested(enabled);
+  } });
 }

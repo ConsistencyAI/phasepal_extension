@@ -10,7 +10,7 @@ const beatSyncPrompt = createBeatSyncPrompt(async () => {
   const reply = await chrome.runtime.sendMessage({ type: "hide_beat_sync_prompts" });
   return reply?.ok === true;
 }, chrome.runtime.getURL("icons/icon-128.png"));
-let stopMonitor: (() => void) | undefined;
+let stopMonitor: ReturnType<typeof startPlaybackMonitor> | undefined;
 let provider: MusicProvider | undefined = providerForUrl(location.href);
 function dispose(): void {
   if (disposed) return;
@@ -22,7 +22,8 @@ function dispose(): void {
 function onMessage(message: unknown, sender: chrome.runtime.MessageSender): void {
   if (disposed || sender.id !== chrome.runtime.id || sender.tab ||
     (sender.url !== undefined && sender.url !== chrome.runtime.getURL("assets/background.js"))) return;
-  const candidate = message as { type?: string; show?: boolean } | null;
+  const candidate = message as { type?: string; show?: boolean; enabled?: boolean } | null;
+  if (candidate?.type === "lyrics_requested" && typeof candidate.enabled === "boolean") stopMonitor?.setLyricsRequested(candidate.enabled);
   if (candidate?.type === "custom_site_removed" && provider === "custom_site") dispose();
   if (candidate?.type === "beat_sync_prompt" && provider && typeof candidate.show === "boolean") beatSyncPrompt.update(candidate.show);
 }

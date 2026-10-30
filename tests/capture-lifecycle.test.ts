@@ -299,7 +299,7 @@ describe("background pending capture", () => {
     listener({ type: "provider_playback", provider: "youtube_music", playing: true,
       hasTitle: true, hasArtist: true, hasTimeline: true, emittedAtUnixMs: 1 },
       { id: "extension", url: "https://music.youtube.com/", tab: { id: 4 } }, reply);
-    await vi.waitFor(() => expect(reply).toHaveBeenCalledWith({ ok: true }));
+    await vi.waitFor(() => expect(reply).toHaveBeenCalledWith({ ok: true, lyricsRequested: false }));
   }
 
   it("hides the site reminder as soon as capture starts", async () => {
