@@ -6,20 +6,22 @@ site with freely playable audio. The extension feature itself does not ask for a
 Phase Pal account. The chosen desktop build may have separate distribution access
 requirements, which must be disclosed before review.
 
-## Required before these instructions can be submitted
+## Windows review setup
 
-Supply a verified public desktop installer/download or a reviewer-accessible build
-and its version/platform. Confirm whether any app access credentials are required.
-Do not send personal account credentials. Do not point reviewers at a private
-GitHub repo, local filesystem path, or an app version missing the bridge.
+Use Google Chrome 116 or newer on Windows and the normal Phase Pal Windows
+installation route. A separate reviewer-only installer is not required. Add
+access instructions only if that route has restrictions. Do not send personal
+credentials or claim an app version includes the bridge without checking it.
 
-The Chrome Web Store item ID must match the native host's approved extension ID.
-The current development ID is `liinajbmlphpehjkmjdffpjhajdpgfpm`; it is not yet
-verified as the store ID. Coordinate any change before building the review app.
+The assigned Chrome Web Store item ID is
+`depmepnaojmbbjgogihalfgeajkfkbjj`. Its public key was verified to derive this ID.
+The unpacked extension and current host configuration use the same ID. Older
+installed Phase Pal builds may still allow the former development ID and need
+an updated app/host registration. Source changes do not update an old player.
 
-## Test steps once the compatible review app is supplied
+## Test steps with a compatible Windows app
 
-1. Install the supplied Phase Pal desktop build and start it. Enable Dance to Music.
+1. Install Phase Pal for Windows through its normal installation route and start it. Enable Dance to Music.
    The app registers its bundled local bridge. No Rust, Python, Visual Studio,
    or terminal host installation is required for users of that build.
 2. Install the draft extension through the review environment. Open its popup and

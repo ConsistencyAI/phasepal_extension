@@ -44,7 +44,7 @@ npm ci
 npm run check
 ```
 
-将生成的 `dist/` 目录作为已解压的扩展加载。开发扩展 ID 必须为 `liinajbmlphpehjkmjdffpjhajdpgfpm`，与原生主机 `app.phasepal.music` 匹配。清单中的公钥固定了此 ID，它不是私密凭据。
+将生成的 `dist/` 目录作为已解压的扩展加载。开发扩展 ID 必须为 `depmepnaojmbbjgogihalfgeajkfkbjj`，与原生主机 `app.phasepal.music` 匹配。清单中的公钥固定了此 ID，它不是私密凭据。
 
 请查看[开发与原生主机命令](docs/DEVELOPMENT.md)、[V1 设计](docs/DESIGN.md)和[贡献指南](CONTRIBUTING.md)。兼容打包应用的普通用户不需要 Rust、Python 或手动安装主机。原生主机开发需要 Rust 1.85+、Python 3 和对应平台的构建工具。
 

@@ -16,7 +16,7 @@ $Manifest = @{
     description = "Phase Pal Dance to Music browser bridge"
     path = $HostPath
     type = "stdio"
-    allowed_origins = @("chrome-extension://liinajbmlphpehjkmjdffpjhajdpgfpm/")
+    allowed_origins = @("chrome-extension://depmepnaojmbbjgogihalfgeajkfkbjj/")
 }
 $Manifest | ConvertTo-Json -Depth 3 | Set-Content -Path $ManifestPath -Encoding utf8
 New-Item -Path "HKCU:\Software\Google\Chrome\NativeMessagingHosts\app.phasepal.music" -Force | Out-Null

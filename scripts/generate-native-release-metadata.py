@@ -35,7 +35,7 @@ def main() -> None:
         "executable": args.executable,
         "sha256": digest,
         "nativeHostName": "app.phasepal.music",
-        "extensionId": "liinajbmlphpehjkmjdffpjhajdpgfpm",
+        "extensionId": "depmepnaojmbbjgogihalfgeajkfkbjj",
     }
     (artifact_dir / "release-manifest.json").write_text(
         json.dumps(release, indent=2) + "\n", encoding="utf-8"

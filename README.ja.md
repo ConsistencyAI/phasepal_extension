@@ -43,7 +43,7 @@ npm ci
 npm run check
 ```
 
-生成された `dist/` ディレクトリを、パッケージ化されていない拡張機能として読み込みます。開発用の拡張機能 ID は `liinajbmlphpehjkmjdffpjhajdpgfpm` で、ネイティブホスト `app.phasepal.music` の許可設定と一致する必要があります。マニフェスト内の公開鍵はこの ID を固定するためのもので、秘密の認証情報ではありません。
+生成された `dist/` ディレクトリを、パッケージ化されていない拡張機能として読み込みます。開発用の拡張機能 ID は `depmepnaojmbbjgogihalfgeajkfkbjj` で、ネイティブホスト `app.phasepal.music` の許可設定と一致する必要があります。マニフェスト内の公開鍵はこの ID を固定するためのもので、秘密の認証情報ではありません。
 
 [開発とネイティブホストのコマンド](docs/DEVELOPMENT.md)、[V1 設計](docs/DESIGN.md)、[貢献ガイド](CONTRIBUTING.md)をご覧ください。互換性のあるパッケージ版アプリを使う一般ユーザーに、Rust、Python、ホストの手動インストールは不要です。ホストの開発には Rust 1.85 以降、Python 3、プラットフォームに対応するビルドツールが必要です。
 
