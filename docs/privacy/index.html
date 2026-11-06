@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Privacy policy · Phase Pal Music Bridge</title>
+  <meta name="description" content="How Phase Pal Music Bridge accesses playback information, analyzes user-approved tab audio locally, and sends fixed rhythm features to the desktop app.">
+  <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header><nav class="wrap" aria-label="Main navigation">
+  <a class="brand" href="../">Phase Pal Music Bridge</a>
+  <div class="links"><a href="../">Setup</a><a href="./" aria-current="page">Privacy</a><a href="https://github.com/ConsistencyAI/phasepal_extension">GitHub</a></div>
+</nav></header>
+<main id="main" class="wrap policy"><article class="content">
+  <p class="eyebrow">Privacy on your device</p>
+  <h1>Privacy policy</h1>
+  <p class="meta">Phase Pal Music Bridge · Consistency AI<br>Effective and last updated: November 6, 2026 · Extension preview 0.1.0</p>
+  <p class="lead">The extension connects browser playback and optional, user-approved tab audio analysis to Dance to Music in your local Phase Pal desktop app.</p>
+  <p>This policy covers the Music Bridge extension and its local native-message data path. It does not cover every feature of the separate Phase Pal app, Chrome, music services, or GitHub. Their privacy practices apply separately.</p>
+  <h2>What the extension accesses</h2>
+  <ul>
+    <li><strong>Playback information:</strong> playing/paused state on the supported music-player hosts and on custom sites you explicitly approve. It checks whether title, artist and timeline metadata exists, and may read explicit MediaSession playback state. Actual title and artist text stays in the page.</li>
+    <li><strong>Local tab information:</strong> tab addresses identify supported sites; local tab IDs select the playback source. The extension does not read Chrome's browsing-history database.</li>
+    <li><strong>Optional tab audio:</strong> after the popup capture action, the selected tab's audio is processed in extension memory to estimate energy, tempo, beat timing, confidence and section intensity. This can include speech, podcasts and ads. No microphone permission is requested.</li>
+    <li><strong>Your settings:</strong> Auto Beat Sync, the Don't show again reminder preference, and exact custom site origins that you add.</li>
+  </ul>
+  <h2>What is sent to the local app</h2>
+  <p>The native host forwards a fixed set of fields to the local Phase Pal app: provider IDs; playback and capture flags; metadata-presence booleans; protocol and extension versions; a random browser-service session ID; sequence numbers and timestamps; numeric energy, estimated tempo, beat phase, confidence, beat pulses, onset density and section intensity; and fixed capture-stop reason codes.</p>
+  <p>Song names, artist names, URLs, page titles, page text, browsing history, account credentials, transcripts and raw audio are not sent through this protocol. The host reads a local app runtime descriptor containing a port and session token and authenticates to the app on <code>127.0.0.1</code>. The desktop app's handling after receiving a frame is outside this extension policy.</p>
+  <h2>Local processing, storage and retention</h2>
+  <p>The extension has no analytics service, advertising endpoint, remote audio upload or speech-transcription path. It does not save captured audio to a recording. Audio samples and playback/analysis state are held in memory while needed for the active browser session or capture, rather than retained in a cloud database.</p>
+  <p>Two booleans are saved in <code>chrome.storage.local</code>: Auto Beat Sync and Don't show again. They are not synced or sent to the app. Custom site origins are stored locally in Chrome's persistent content-script registrations; URL paths, query strings, fragments and credentials are not saved. The custom origins are not sent to the native host. These local settings persist across restarts until changed or removed.</p>
+  <p>Host installation writes a native-message manifest and executable into the user profile and a per-user Windows registry entry where applicable. The separate Phase Pal application owns its runtime descriptor and its own retention practices.</p>
+  <h2>Your controls</h2>
+  <p>Select <strong>Enable Beat Sync</strong> to start tab capture and <strong>Stop Beat Sync</strong> to stop it. Chrome shows a capture indicator, and the extension routes captured tab audio back to your output so it stays audible. Auto Beat Sync is off by default. If saved on, opening the popup on a ready tab attempts capture once. It can preserve the approved stream through pauses and same-site track changes; it never authorizes unattended capture of a new stream or another tab.</p>
+  <p>Stop, opting out of Auto Beat Sync, turning Dance to Music off, app disconnect, permission loss, leaving the site, tab close or stream end stops capture. Failed or stopped captures do not automatically retry. <strong>Not now</strong> dismisses a site reminder for the current document. <strong>Don't show again</strong> saves a local preference; the reminder itself never starts capture.</p>
+  <p>Remove a custom site in the popup to delete its registration, revoke its optional permission and stop its capture. Chrome's extension settings also let you change site access. Disable or remove the extension to stop automatic playback reporting. Removing the extension removes its Chrome-local preferences and registrations; it does not uninstall the separate desktop app or delete that app's data.</p>
+  <h2>Why these permissions are needed</h2>
+  <div class="table-scroll"><table><thead><tr><th scope="col">Permission</th><th scope="col">Purpose</th></tr></thead><tbody>
+    <tr><td>Named music-site access</td><td>Observe playback and metadata presence on supported player hosts.</td></tr>
+    <tr><td>Optional HTTP(S) site access</td><td>Request access to one exact custom site after you add it, rather than granting all-site access automatically.</td></tr>
+    <tr><td><code>scripting</code></td><td>Register and inject the packaged playback monitor on approved custom websites.</td></tr>
+    <tr><td><code>nativeMessaging</code></td><td>Send the fixed fields described above to the installed local bridge.</td></tr>
+    <tr><td><code>tabCapture</code></td><td>Obtain the selected tab audio stream after your popup action.</td></tr>
+    <tr><td><code>offscreen</code></td><td>Analyze the approved stream outside the popup's short lifetime.</td></tr>
+    <tr><td><code>storage</code></td><td>Remember the two local boolean preferences.</td></tr>
+  </tbody></table></div>
+  <h2>Sharing and Limited Use</h2>
+  <p>The extension does not sell user data, transfer it for advertising or unrelated purposes, or use it for creditworthiness or lending decisions. The local bridge uses the disclosed fields to provide Dance to Music. The use of information received from Google APIs will adhere to the Chrome Web Store User Data Policy, including the Limited Use requirements.</p>
+  <h2>This website and other services</h2>
+  <p>These setup and privacy pages have no added analytics, forms, cookies or third-party embeds. They are hosted by GitHub Pages. GitHub logs visitors' IP addresses for security purposes; see the <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement">GitHub Privacy Statement</a>. Visiting a music website or using the separate app remains subject to that service's policies.</p>
+  <h2>Changes and contact</h2>
+  <p>Updates will be published here with a revised date. For privacy questions or help with local data controls, contact <a href="mailto:hello@consistencyai.net">hello@consistencyai.net</a>. If you email us, your message and contact details are handled to respond to your request; do not include raw audio, credentials or private page content.</p>
+  <p><a href="../#support">Setup and support</a> · <a href="https://github.com/ConsistencyAI/phasepal_extension/blob/main/docs/PRIVACY.md">Technical data boundary</a></p>
+</article></main>
+<footer><div class="wrap"><p>© 2026 Consistency AI · Phase Pal Music Bridge</p><p><a href="../">Setup guide</a> · <a href="https://github.com/ConsistencyAI/phasepal_extension">MIT source</a></p></div></footer>
+</body>
+</html>

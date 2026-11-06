@@ -50,10 +50,10 @@ content, restricted pages, login requirements, subscriptions, and regional limit
 still apply. The extension does not bypass them.
 
 SETUP AND SUPPORT
-https://www.phasepal.com/browser-extension
+https://consistencyai.github.io/phasepal_extension/
 
 EXTENSION PRIVACY
-https://www.phasepal.com/browser-extension/privacy
+https://consistencyai.github.io/phasepal_extension/privacy/
 
 CONTACT
 hello@consistencyai.net
@@ -62,11 +62,11 @@ hello@consistencyai.net
 
 - Default listing language: English.
 - Suggested category: Entertainment (use the closest current dashboard category).
-- Homepage: https://www.phasepal.com/browser-extension
-- Support: https://www.phasepal.com/browser-extension#support
-- Privacy policy: https://www.phasepal.com/browser-extension/privacy
+- Homepage: https://consistencyai.github.io/phasepal_extension/
+- Support: https://consistencyai.github.io/phasepal_extension/#support
+- Privacy policy: https://consistencyai.github.io/phasepal_extension/privacy/
 - Contact: hello@consistencyai.net
 - Publisher: the verified Consistency AI publisher selected in the dashboard.
 - Website pages must be deployed and publicly accessible before submission.
-- Do not link the private GitHub repository as public installation or support.
+- Link the GitHub Pages setup guide for installation and support.
 - No price, store-install URL, approved status, or universal compatibility claim is supplied.

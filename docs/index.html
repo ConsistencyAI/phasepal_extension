@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Set up Phase Pal Music Bridge</title>
+  <meta name="description" content="Set up the Phase Pal Music Bridge developer preview, connect the desktop app, and control local tab audio analysis.">
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header><nav class="wrap" aria-label="Main navigation">
+  <a class="brand" href="./">Phase Pal Music Bridge</a>
+  <div class="links"><a href="./" aria-current="page">Setup</a><a href="privacy/">Privacy</a><a href="https://github.com/ConsistencyAI/phasepal_extension">GitHub</a></div>
+</nav></header>
+<main id="main" class="wrap">
+  <section class="hero" aria-labelledby="title">
+    <div><p class="eyebrow">Dance to Music · Developer preview</p>
+      <h1 id="title">Bring browser music<br>to your Pal.</h1>
+      <p class="lead">Connect playback to Phase Pal, then choose when to analyze a tab's rhythm. Beat analysis runs on your device.</p>
+      <a class="button" href="#setup">Set up the preview</a>
+    </div>
+    <aside class="flow" aria-label="How the bridge works">
+      <ol><li>Your music tab</li><li>Local playback and optional beat analysis</li><li>Your Phase Pal desktop app</li></ol>
+      <p>No microphone permission. No raw audio sent to the desktop app. No extension audio uploads.</p>
+    </aside>
+  </section>
+  <div class="content">
+    <aside class="notice"><strong>This is a developer preview.</strong> The extension is not yet on the Chrome Web Store. You need a compatible Phase Pal build with the browser bridge bundled and registered. This repository does not provide a desktop installer. Live browser and packaged-app verification are still pending.</aside>
+    <section id="setup" aria-labelledby="setup-title">
+      <h2 id="setup-title">Set up the preview</h2>
+      <p>Use Google Chrome 116 or newer on Windows or macOS. The current install workflow does not support Linux or other browsers.</p>
+      <ol class="steps">
+        <li><h3>Check your Phase Pal build</h3><p>Open a compatible desktop build that includes the music bridge, and turn on <strong>Dance to Music</strong>. The app registers its own bridge with Chrome. An older app does not gain this integration just by updating the extension. Ordinary users of a compatible packaged app do not need Rust, Python, or manual host commands.</p></li>
+        <li><h3>Load the preview extension</h3><p>Download <code>phasepal-music-bridge-preview-0.1.0.zip</code> from <a href="https://github.com/ConsistencyAI/phasepal_extension/releases">GitHub Releases</a> and extract it. Open <code>chrome://extensions</code>, enable <strong>Developer mode</strong>, select <strong>Load unpacked</strong>, and select the extracted folder containing <code>manifest.json</code>. The separate store-upload ZIP is for the developer dashboard.</p></li>
+        <li><h3>Play something in Chrome</h3><p>Start playback on a supported music website. Open Chrome's Extensions menu and select <strong>Phase Pal Music Bridge</strong>. Pin it if you want quick access. Check the popup's actual connection status.</p></li>
+        <li><h3>Choose Beat Sync</h3><p>Select <strong>Enable Beat Sync</strong> to analyze the active supported tab. Chrome shows a capture indicator and the tab remains audible. Select <strong>Stop Beat Sync</strong> to end capture. Estimates depend on the audio; a detected player does not prove the sound is music.</p></li>
+      </ol>
+    </section>
+    <section aria-labelledby="sites-title">
+      <h2 id="sites-title">Your music websites</h2>
+      <p>Built-in integrations cover Spotify Web, YouTube Music, SoundCloud, Apple Music, Amazon Music regional players, Deezer, TIDAL, Qobuz, Pandora, Yandex Music, QQ Music, KuGou, JioSaavn, LINE MUSIC, Bugs, JOOX, Anghami, and Audiomack. Account, subscription, region and player restrictions still apply. <a href="https://github.com/ConsistencyAI/phasepal_extension/blob/main/docs/SUPPORTED_SITES.md">See exact hosts and verification limits.</a></p>
+      <p>For another site, expand <strong>Custom websites</strong> in the popup, enter its address and choose <strong>Add website</strong>. Chrome requests access to that exact site. Refresh the tab if needed. Site access allows playback observation; starting tab audio capture still needs the popup action. Remove the site in the popup to revoke its optional permission and stop its capture.</p>
+      <p>Speech, podcasts, ads and videos may also trigger dancing. The bridge is not a song or speech classifier and does not bypass protected content.</p>
+    </section>
+    <section aria-labelledby="control-title">
+      <h2 id="control-title">You control capture</h2>
+      <p><strong>Auto Beat Sync</strong> is off by default and saved locally. With it on, opening the popup on a ready tab attempts capture once. The approved stream can continue through pauses and same-site track changes. A new tab or ended stream needs a new extension invocation or Enable click. This setting never grants unattended capture.</p>
+      <p>Capture also ends when you turn Auto Beat Sync off, turn Dance to Music off, lose the app connection or site permission, leave the site, close the tab, or end the stream. A site's reminder only directs you to the popup. <strong>Not now</strong> dismisses it for the current document; <strong>Don't show again</strong> saves a local preference.</p>
+      <p>Tab capture includes speech and ads from that tab. Audio is processed in memory; the extension does not request microphone access, record audio to a file, transcribe speech, or upload audio. <a href="privacy/">Read the extension privacy policy.</a></p>
+    </section>
+    <section id="support" aria-labelledby="support-title">
+      <h2 id="support-title">Connection help</h2>
+      <details><summary>Phase Pal is unavailable</summary><p>Start a compatible app build and enable Dance to Music. If the bridge is missing, update to a build that includes it. Restart the app and Chrome after an update. The preview development extension ID is <code>liinajbmlphpehjkmjdffpjhajdpgfpm</code> and the native host is <code>app.phasepal.music</code>; a mismatched ID will not connect.</p></details>
+      <details><summary>Beat Sync is unavailable or shows no stable beat</summary><p>Focus the intended supported or approved custom tab, start playback, and reopen the popup. Check Chrome's site permissions. Suspended audio, silence, speech, irregular rhythm and protected media can prevent useful estimates. Exact BPM values are not guaranteed.</p></details>
+      <details><summary>I want to stop or remove it</summary><p>Select Stop Beat Sync to stop audio analysis. Disable or remove the extension at <code>chrome://extensions</code> to stop playback reporting too. Removing the extension removes its Chrome-local settings and registrations. The separate app and its files are managed separately.</p></details>
+      <p>For help, contact <a href="mailto:hello@consistencyai.net">hello@consistencyai.net</a>. Include extension and app versions, operating system, and the visible error. Please do not send raw audio, account credentials, or private browser content.</p>
+      <p>Developers: <a href="https://github.com/ConsistencyAI/phasepal_extension/blob/main/docs/DEVELOPMENT.md">build and native-host setup</a> · <a href="https://github.com/ConsistencyAI/phasepal_extension/blob/main/SECURITY.md">security reporting</a>.</p>
+    </section>
+  </div>
+</main>
+<footer><div class="wrap"><p>© 2026 Consistency AI · Phase Pal Music Bridge</p><p><a href="privacy/">Privacy policy</a> · <a href="https://github.com/ConsistencyAI/phasepal_extension">MIT source</a>. Company artwork has separate terms.</p></div></footer>
+</body>
+</html>

@@ -55,9 +55,10 @@ The manifest and permission list should be reviewed with each release.
 The use of information received from Google APIs will adhere to the Chrome Web
 Store User Data Policy, including the Limited Use requirements.
 
-The extension-specific public policy is prepared at
-`https://www.phasepal.com/browser-extension/privacy`. It must be deployed before
-that URL is entered as a live store privacy link.
+The extension-specific public policy is at
+[the GitHub Pages privacy page](https://consistencyai.github.io/phasepal_extension/privacy/).
+Its source is `privacy/index.html` in this directory. Recheck the deployed page
+and its consistency with the packaged version before store submission.
 
 ## Storage and network boundary
 

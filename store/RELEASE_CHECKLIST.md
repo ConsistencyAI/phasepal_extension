@@ -27,16 +27,16 @@ public listing and review instructions.
    differ, update both native-host source copies, app allowlists/registration,
    sidecar identity, extension development key, scripts, tests, and documentation;
    rebuild the native payload and compatible app. Keep the draft unpublished.
-3. Deploy the website branch. Check public homepage, support and privacy URLs from
+3. Enable GitHub Pages from `main` and `/docs`. Check public homepage, support and privacy URLs from
    a signed-out browser. They must be live and must not require preview access.
 4. Review all listing text and data-usage fields against the actual current
    dashboard definitions, then confirm the limited-use certifications.
 5. Supply a compatible reviewer-accessible desktop build and finish the access
    section of REVIEWER_INSTRUCTIONS.md. Do not invent a download or account.
 6. Capture real Chrome/runtime screenshots: at least one 1280x800 or 640x400 full
-   frame. The package's preview images, if provided, show the real built popup with
-   a labeled local fixture; they are draft artwork, not evidence of live playback.
-   Replace them with real runtime captures before final submission.
+   frame. Screenshot capture was skipped at the user's request on November 6;
+   no real runtime screenshot is included in the preview release. Promotional
+   artwork is not evidence of live playback.
 7. Provide a 128x128 store icon and a 440x280 small promotional image. The bunny
    icon is company artwork; retain its NOTICE. Preview all images at store size.
 8. Complete Windows installed-app/Chrome playback, pause, stop, navigation, restart,
@@ -52,4 +52,5 @@ public listing and review instructions.
 - https://developer.chrome.com/docs/webstore/cws-dashboard-privacy
 - https://developer.chrome.com/docs/extensions/reference/manifest/key
 
-Do not add CI. Keep the GitHub repository private until the user changes that decision.
+Do not add CI. Source publication was authorized on November 6, 2026; it does not
+authorize Chrome Web Store submission or extension publication.

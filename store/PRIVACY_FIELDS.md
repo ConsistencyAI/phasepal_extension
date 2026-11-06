@@ -95,7 +95,7 @@ Limited-use statements to confirm against the final uploaded version:
 - User data is not used for creditworthiness or lending decisions.
 
 Policy URL after deployment:
-https://www.phasepal.com/browser-extension/privacy
+https://consistencyai.github.io/phasepal_extension/privacy/
 
 Sources:
 - https://developer.chrome.com/docs/webstore/cws-dashboard-privacy

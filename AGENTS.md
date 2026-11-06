@@ -2,7 +2,8 @@
 
 ## Scope and release state
 
-- Keep the GitHub repository private until the user explicitly asks to publish it.
+- The user authorized public GitHub source and documentation on November 6, 2026.
+  Preserve the current repository visibility unless the user requests a change.
 - Source publication, Chrome Web Store review, and extension publication are
   separate actions. Preparing a package does not authorize any of them.
 - Do not add CI workflows unless the user explicitly requests them.
