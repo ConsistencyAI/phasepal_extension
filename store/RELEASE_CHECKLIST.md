@@ -37,8 +37,10 @@ public listing and review instructions.
    frame. Screenshot capture was skipped at the user's request on November 6;
    no real runtime screenshot is included in the preview release. Promotional
    artwork is not evidence of live playback.
-7. Provide a 128x128 store icon and a 440x280 small promotional image. The bunny
-   icon is company artwork; retain its NOTICE. Preview all images at store size.
+7. Provide a 128x128 store icon. `store/render-promo.mjs` produces the 440x280
+   small promo and optional 1400x560 marquee tile. The bunny icon is company
+   artwork; retain its NOTICE. Preview all images at store size. Promotional
+   artwork does not replace the required real screenshot.
 8. Complete Windows installed-app/Chrome playback, pause, stop, navigation, restart,
    permission revocation, and capture checks. Qualify macOS if advertised for it.
 9. Select intended distribution and region settings, save the draft, and review

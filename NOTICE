@@ -10,5 +10,11 @@ official extension. You may retain these files when distributing an unmodified
 copy of this extension. The artwork is not covered by the MIT source license.
 Other uses require permission from Consistency AI.
 
+The unmodified source icon in store/assets/phasepal-icon-1024.png is the same
+company artwork, included to reproduce the official extension's promotional
+tiles at full resolution at the publisher's request. It is not MIT licensed.
+The generated promotional tiles also contain this company artwork and do not
+grant trademark rights or permission for unrelated use.
+
 Source: Phase Pal/Assets/_PhasePal/UI/Sprites/Logo/bunny_key_1024.png in the
 Phase Pal app repository. Only image size was changed; no crop or recolor.

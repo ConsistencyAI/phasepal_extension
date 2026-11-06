@@ -70,7 +70,8 @@ The user chose to skip real screenshot capture during this task. At least one
 authentic 1280x800 or 640x400 screenshot remains required for the store. No real
 runtime screenshot or invented live connection is supplied with this release.
 The 128x128 icon is in `public/icons/icon-128.png`; `store/render-promo.mjs`
-produces the 440x280 promotional tile, which is not runtime evidence.
+produces the 440x280 small promo and 1400x560 marquee tile. Neither is runtime
+evidence or a replacement for a real screenshot.
 
 Finally review dashboard data-use definitions, certifications and distribution
 settings. No Chrome Web Store item was created or submitted in this preparation.
