@@ -1,6 +1,6 @@
 # Phase Pal Music Bridge
 
-[English](README.md) · [简体中文](README.zh-CN.md) · [Русский](README.ru.md) · [Español](README.es.md)
+[English](README.md) · [简体中文](README.zh-CN.md) · [Русский](README.ru.md) · [Español](README.es.md) · [日本語](README.ja.md)
 
 Расширение связывает воспроизведение в браузере с функцией **Dance to Music** в Phase Pal. Необязательный анализ ритма выполняется на вашем устройстве. Проект поддерживает Consistency AI.
 

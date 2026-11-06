@@ -1,6 +1,6 @@
 # Phase Pal Music Bridge
 
-[English](README.md) · [简体中文](README.zh-CN.md) · [Русский](README.ru.md) · [Español](README.es.md)
+[English](README.md) · [简体中文](README.zh-CN.md) · [Русский](README.ru.md) · [Español](README.es.md) · [日本語](README.ja.md)
 
 将浏览器播放状态连接到 Phase Pal 的 **Dance to Music（随音乐舞动）** 功能；可选的节拍分析在你的设备上完成。由 Consistency AI 维护。
 

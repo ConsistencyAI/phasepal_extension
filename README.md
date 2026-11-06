@@ -1,6 +1,6 @@
 # Phase Pal Music Bridge
 
-[English](README.md) · [简体中文](README.zh-CN.md) · [Русский](README.ru.md) · [Español](README.es.md)
+[English](README.md) · [简体中文](README.zh-CN.md) · [Русский](README.ru.md) · [Español](README.es.md) · [日本語](README.ja.md)
 
 Connect browser playback to **Dance to Music** in Phase Pal, with optional beat
 analysis performed on your device. Maintained by Consistency AI.
