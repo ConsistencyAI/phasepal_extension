@@ -2,9 +2,11 @@
 
 Review date: 2026-10-18 (America/Chicago).
 
-Result: local source preparation and checks are complete. The repository is still
-private. Publishing source and distributing
-a working extension/native-host package are separate decisions.
+Original result: local source preparation and checks were complete while the
+repository remained private. The user explicitly authorized public source,
+GitHub Pages, and a preview release on November 6, 2026. Earlier private-visibility
+observations below describe their review dates. A working store/native-host
+distribution still requires the separate release checks below.
 
 ## Scope
 
@@ -129,10 +131,8 @@ Users of a newly built app should not need the standalone host commands. This
 does not establish that an already distributed app includes the bridge. Windows
 and macOS packaged-player and Chrome checks remain required.
 
-- Maintainer: confirm authority to publish the existing MIT-licensed source and
-  review organization access before changing visibility.
-- Confirm the approved changes are on the company repository before changing
-  visibility.
+- Source publication authority: explicitly confirmed by the maintainer on
+  November 6, 2026. Publish the approved changes to the company repository.
 - For compiled distribution, include applicable complete dependency license texts.
   The current metadata generator produces a dependency inventory, not a complete
   binary license bundle. Signing and store identity still need qualification.

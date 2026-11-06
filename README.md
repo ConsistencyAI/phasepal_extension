@@ -1,149 +1,112 @@
 # Phase Pal Music Bridge
 
-Chrome extension and local native host for Phase Pal Dance to Music, maintained
-under [Consistency AI](https://github.com/ConsistencyAI/phasepal_extension).
+[English](README.md) · [简体中文](README.zh-CN.md) · [Русский](README.ru.md) · [Español](README.es.md)
 
-This is a developer source release. It is not a Chrome Web Store release or a
-signed, packaged Phase Pal installer. A compatible Phase Pal app with the browser
-bridge is required; this repository does not include the app.
+Connect browser playback to **Dance to Music** in Phase Pal, with optional beat
+analysis performed on your device. Maintained by Consistency AI.
 
-See the [V1 design](docs/DESIGN.md) for the data path, privacy boundary,
-authentication, and lifecycle rules.
+**Preview:** the source is open under MIT; the bunny artwork has separate terms.
+This is not a Chrome Web Store release or a signed Phase Pal installer. A
+compatible desktop app with the bundled browser bridge is required and is not
+included here. Live Chrome playback and packaged-player checks remain open.
 
-## Music site integrations
+## Setup and privacy
 
-- Spotify Web
-- YouTube Music
-- SoundCloud
-- Apple Music, Amazon Music (including regional players), Deezer, TIDAL, Qobuz,
-  Pandora and Yandex Music.
-- QQ Music and KuGou; JioSaavn; LINE MUSIC and Bugs; JOOX; Anghami; Audiomack.
+- [Setup guide](https://consistencyai.github.io/phasepal_extension/)
+- [Privacy policy](https://consistencyai.github.io/phasepal_extension/privacy/)
+- [Technical privacy and permissions](docs/PRIVACY.md)
+- [Development and native-host setup](docs/DEVELOPMENT.md)
 
-See [the exact site list and verification limits](docs/SUPPORTED_SITES.md).
-Users can also add their own websites through **Custom websites** in the popup.
-Chrome asks for access to that exact website. See [custom website setup](docs/CUSTOM_SITES.md).
-These are implemented integrations; account, region and live playback checks
-are still required before a runtime release. Older Phase Pal apps and native
-hosts accept only the original three services.
+## What it does
 
-Playback detection is automatic on these sites. Reported playback is treated as
-music: this is not a song, podcast, or speech classifier. Beat sync starts only after the
-user selects **Enable Beat Sync** in the extension popup. Chrome shows this as a
-user-approved tab capture. The extension keeps tab audio audible while it
-calculates energy, tempo, beat phase, and section intensity locally.
+Reports playing/paused state on Spotify Web, YouTube Music, SoundCloud, Apple
+Music, Amazon Music regional players, Deezer, TIDAL, Qobuz, Pandora, Yandex Music,
+QQ Music, KuGou, JioSaavn, LINE MUSIC, Bugs, JOOX, Anghami, and Audiomack.
+See the [exact hosts and verification limits](docs/SUPPORTED_SITES.md). You can
+also add an exact website through **Custom websites**, after Chrome grants
+access to that site; see [custom site setup](docs/CUSTOM_SITES.md).
 
-The bridge never sends song names, artists, URLs, page titles, page content,
-browser history, or captured PCM audio to Phase Pal.
+Supported-site playback is treated as music. Speech, podcasts and ads can also
+trigger dancing; this is not a song or speech classifier. Account, subscription,
+region, protected-content and player restrictions still apply. These integrations
+need live playback checks before a runtime release.
 
-See [privacy and permissions](docs/PRIVACY.md), [security reporting](SECURITY.md),
-and the [public release review](docs/PUBLIC_RELEASE_REVIEW.md).
+## Use the extension
 
-## Extension development
+1. Use Chrome 116 or newer on Windows or macOS and a compatible Phase Pal build
+   that bundles and registers the browser bridge. Linux and other browsers are
+   outside the current install workflow. Older apps do not gain the bridge from
+   an extension update alone.
+2. For this developer preview, download `phasepal-music-bridge-preview-0.1.0.zip`
+   from [Releases](https://github.com/ConsistencyAI/phasepal_extension/releases),
+   extract it, and choose **Load unpacked** in Developer mode at
+   `chrome://extensions`. Select the folder containing `manifest.json`.
+   The separate store ZIP is for dashboard upload and omits the development key.
+3. Open Phase Pal and turn on **Dance to Music**. Start playback on a supported
+   or approved custom site, then open the extension popup to check the connection.
+4. Select **Enable Beat Sync** to analyze that tab's audio locally. Chrome shows
+   the capture indicator; the tab remains audible. Select **Stop Beat Sync** to end it.
 
-Requirements: Chrome 116 or newer, Node.js 22.12+ on the 22.x line or Node.js 24+,
-and npm. The native host
-targets Windows and macOS. Linux and other browsers are not supported by the
-current install workflow.
+**Auto Beat Sync** is off by default and saved only on this device. With it on,
+opening the popup on a ready music tab attempts capture once. An approved stream
+can continue through pauses and same-site track changes. A new tab or ended
+stream needs another extension invocation or Enable click; the setting never
+grants unattended capture. Stop, opting out, Dance to Music off, app disconnect,
+permission loss, leaving the site, tab close or stream end stops capture.
+
+A dismissible site reminder points to the toolbar popup. **Not now** lasts for
+the current document; **Don't show again** saves a local preference across
+sites and restarts. Disable or remove the extension to stop playback reporting.
+
+## Data stays local
+
+Tab audio, including speech and ads, is analyzed in extension memory without
+microphone access, recording, transcription, analytics or remote upload. Only
+fixed playback/provider flags, metadata-presence booleans, session/protocol
+fields and numeric rhythm values go to the local Phase Pal app. Song names,
+artist names, URLs, page text, browser history and raw audio are not sent to it.
+Custom origins and the two preferences stay in Chrome locally. Phase Pal, Chrome
+and music services have separate privacy practices; see [the full boundary](docs/PRIVACY.md).
+
+## Build and check
+
+Use Node.js 22.12+ on the 22.x line or Node.js 24+, npm, and the committed lockfile:
 
 ```bash
 npm ci
 npm run check
 ```
 
-Load `dist/` as an unpacked extension from `chrome://extensions` after running
-`npm run build`. Enable Developer mode and select **Load unpacked**. Check that
-the extension ID is `liinajbmlphpehjkmjdffpjhajdpgfpm`; the native-host registration
-allows only that ID. The public `key` in the manifest fixes this development ID;
-it is not a private signing key or credential.
+Load the resulting `dist/` directory as an unpacked extension. The development
+ID must be `liinajbmlphpehjkmjdffpjhajdpgfpm`, matching native host
+`app.phasepal.music`. The manifest's public key fixes this ID; it is not a
+private credential.
 
-## Connect to Phase Pal
-
-Updated Phase Pal Windows and macOS builds bundle the native bridge and register
-it with Chrome when the app starts. Users install the extension and open Phase
-Pal; they do not need Rust, Python, Visual Studio, or terminal commands. This
-requires an app build that includes the new integration. Older app builds do not
-gain it from an extension update alone.
-
-The app's normal sidecar source and producer are `Tools/phase-browser-music` in
-the Phase Pal repository. That source snapshot records this repository's native
-host revision. Keep the fixed protocol and extension identity coordinated when
-updating either repository. Source integration is not packaged-player QA or store
-approval.
-
-## Standalone native host development (older app builds)
-
-Requirements: Rust 1.85 or newer (edition 2024) with Cargo, Python 3, and the platform
-linker/build tools. On macOS, install the Xcode command line tools. On Windows,
-use the Visual Studio C++ x64 developer environment. Build the Rust host and its
-release metadata from the repository root:
+See [development and native-host commands](docs/DEVELOPMENT.md),
+[V1 design](docs/DESIGN.md), and [contributing](CONTRIBUTING.md). Ordinary users
+of a compatible packaged app do not need Rust, Python or manual host installation.
+Host development needs Rust 1.85+, Python 3 and platform build tools.
 
 ```bash
-./scripts/build-native-host-macos.sh
-./scripts/install-native-host-macos.sh
+cargo test --manifest-path native-host/Cargo.toml --locked
+npm run package:store
 ```
 
-On Windows, use an x64 Developer PowerShell:
+Packaging requires Python 3 and writes both ZIPs and their checksums under
+`BuildArtifacts/chrome-web-store/0.1.0/`. The preview ZIP keeps the development
+key. The store upload omits it; verify Google's assigned store ID and coordinate
+both native-host copies and app registration before distributing an app for that
+ID. No native binary is included. Local tests do not verify live Chrome capture
+or a packaged player. No CI is configured.
 
-```powershell
-powershell -ExecutionPolicy Bypass -File scripts/build-native-host-windows.ps1
-powershell -ExecutionPolicy Bypass -File scripts/install-native-host-windows.ps1
-```
+## Release and support
 
-The install scripts register only `app.phasepal.music` for extension ID
-`liinajbmlphpehjkmjdffpjhajdpgfpm`. Uninstall scripts remove only that exact
-per-user registration. These commands are developer fallback tools, not steps
-for users of an updated packaged app.
+See [store preparation](docs/STORE_PREPARATION.md) and the
+[submission checklist](store/RELEASE_CHECKLIST.md) for remaining gates.
+Keep builds, audio, caches, settings and secrets out of Git.
 
-Run Phase Pal, enable **Dance to Music** in its settings, and start playback on a
-supported site. Open the extension popup to check the connection. Select
-**Enable Beat Sync** to capture the active supported tab, then **Stop Beat Sync**
-to end capture. Disable the extension to stop automatic playback reporting.
-
-To remove the host registration, run `./scripts/uninstall-native-host-macos.sh`
-on macOS, or `powershell -ExecutionPolicy Bypass -File
-scripts/uninstall-native-host-windows.ps1` on Windows. Remove the unpacked
-extension separately in Chrome.
-
-## Local checks and contributions
-
-### Auto Beat Sync and site reminder
-
-Auto Beat Sync is off by default and saved locally in Chrome. Turn it on in the
-popup. Opening the extension with Auto Beat Sync on attempts capture once for the
-current ready music tab; if Chrome requires another action, select Enable Beat Sync.
-Capture stays active
-through pauses and same-site track changes; it does not switch to another tab.
-Turning Auto Beat Sync off or pressing Stop ends capture. Turning Dance to Music
-off, losing the app connection or site permission, leaving the site, closing the
-tab, or ending the stream also stops capture. A new tab or ended stream needs a
-new extension invocation or Enable click; the saved option never grants unattended capture permission.
-
-Supported pages show a dismissible “Want to enable Beat Sync?” reminder when the
-app is ready and no capture is active. It directs users to the extension's toolbar
-popup. Not now dismisses it for that document. Don't show again saves a local
-choice that suppresses reminders across sites and restarts. No desktop notification permission is
-needed. Capture still includes speech and ads from the selected tab.
-
-For a Chrome Web Store draft, run `npm run package:store` with Python 3 available.
-The checked upload ZIP and field drafts are written under
-`BuildArtifacts/chrome-web-store/<version>/`. See [the submission checklist](store/RELEASE_CHECKLIST.md).
-The store upload omits the development public key. Confirm the assigned store ID
-and coordinate it with the native host before building a release app.
-
-`npm run check` runs the TypeScript tests, type check, and extension build. Use
-`cargo test --manifest-path native-host/Cargo.toml --locked` for the native host.
-These checks do not verify Chrome capture, website compatibility, or avatar
-behavior. See [CONTRIBUTING.md](CONTRIBUTING.md) for the manual checks required for
-a runtime release. No CI setup is required.
-
-## Artifact boundary
-
-- Extension and host source stay in this repository.
-- Cargo and Vite intermediate files stay under their normal ignored paths.
-- Native release payloads go under `BuildArtifacts/NativeHost/<platform>/`.
-- This developer milestone does not stage, sign, or package the host in a Phase
-  Pal player release.
-
-Source is available under the [MIT license](LICENSE). Dependency licenses also
-apply when distributing built artifacts. The bunny logo is separate company
-artwork; see [NOTICE](NOTICE) for its use and distribution terms.
+Contact [hello@consistencyai.net](mailto:hello@consistencyai.net).
+See [security reporting](SECURITY.md), [conduct](CODE_OF_CONDUCT.md), and
+[source release review](docs/PUBLIC_RELEASE_REVIEW.md).
+Source and documents use the [MIT license](LICENSE); dependency licenses apply
+to builds. The bunny artwork has separate terms in [NOTICE](NOTICE).

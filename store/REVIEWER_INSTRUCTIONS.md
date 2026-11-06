@@ -37,8 +37,8 @@ verified as the store ID. Coordinate any change before building the review app.
 7. Stop/restart the app, refresh the music tab, and verify recovery. App connection,
    privacy and setup help are linked from the public support page.
 
-Public support: https://www.phasepal.com/browser-extension#support
-Extension privacy: https://www.phasepal.com/browser-extension/privacy
+Public support: https://consistencyai.github.io/phasepal_extension/#support
+Extension privacy: https://consistencyai.github.io/phasepal_extension/privacy/
 Contact: hello@consistencyai.net
 
 No live Chrome, subscription/region-wide compatibility, installed-player, macOS
