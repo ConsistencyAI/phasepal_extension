@@ -3,9 +3,10 @@
 Chrome extension and local native host for Phase Pal Dance to Music, maintained
 under [Consistency AI](https://github.com/ConsistencyAI/phasepal_extension).
 
-This is a developer source release. It is not a Chrome Web Store release or a
-signed, packaged Phase Pal installer. A compatible Phase Pal app with the browser
-bridge is required; this repository does not include the app.
+This repository remains private while its source release and Chrome Web Store
+submission are prepared. It is not a Chrome Web Store release or a signed,
+packaged Phase Pal installer. A compatible Phase Pal app with the browser bridge
+is required; this repository does not include the app.
 
 See the [V1 design](docs/DESIGN.md) for the data path, privacy boundary,
 authentication, and lifecycle rules.
@@ -36,7 +37,8 @@ The bridge never sends song names, artists, URLs, page titles, page content,
 browser history, or captured PCM audio to Phase Pal.
 
 See [privacy and permissions](docs/PRIVACY.md), [security reporting](SECURITY.md),
-and the [public release review](docs/PUBLIC_RELEASE_REVIEW.md).
+the [source release review](docs/PUBLIC_RELEASE_REVIEW.md), and the
+[current store preparation status](docs/STORE_PREPARATION.md).
 
 ## Extension development
 

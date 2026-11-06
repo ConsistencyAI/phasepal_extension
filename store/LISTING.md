@@ -1,6 +1,6 @@
 # Chrome Web Store listing draft
 
-Prepared October 20, 2026. Do not describe this draft as an approved store release.
+Prepared November 6, 2026. Do not describe this draft as an approved store release.
 
 ## Name
 
@@ -8,7 +8,7 @@ Phase Pal Music Bridge
 
 ## Short description
 
-Connect browser audio to Phase Pal Dance to Music, with optional local beat sync and custom websites.
+Connect supported browser music to Phase Pal Dance to Music.
 
 ## Detailed description
 

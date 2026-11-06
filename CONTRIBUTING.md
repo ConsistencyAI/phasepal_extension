@@ -4,6 +4,7 @@ Keep changes small and describe the user-visible result. For substantial changes
 open an issue first to agree on scope. Do not include credentials, captured audio,
 private browser data, generated builds, or local machine settings in a pull request.
 See [SECURITY.md](SECURITY.md) for vulnerability reports.
+Follow the [community conduct rules](CODE_OF_CONDUCT.md) in project spaces.
 
 ## Local checks
 
