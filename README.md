@@ -78,7 +78,7 @@ npm run check
 ```
 
 Load the resulting `dist/` directory as an unpacked extension. The development
-ID must be `liinajbmlphpehjkmjdffpjhajdpgfpm`, matching native host
+ID must be `depmepnaojmbbjgogihalfgeajkfkbjj`, matching native host
 `app.phasepal.music`. The manifest's public key fixes this ID; it is not a
 private credential.
 

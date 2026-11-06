@@ -22,6 +22,9 @@ def main():
         raise ValueError("Development public key is required to record the current native-host identity")
     public_hash = hashlib.sha256(base64.b64decode(development_key, validate=True)).hexdigest()[:32]
     development_id = "".join(chr(ord("a") + int(character, 16)) for character in public_hash)
+    configured_id = json.loads((ROOT / "config/extension-id.json").read_text(encoding="utf-8"))["extensionId"]
+    if not re.fullmatch(r"[a-p]{32}", configured_id) or development_id != configured_id:
+        raise ValueError("Manifest public key does not match the coordinated extension ID")
     manifest["homepage_url"] = "https://consistencyai.github.io/phasepal_extension/"
     output = ROOT / "BuildArtifacts/chrome-web-store" / manifest["version"]
     output.mkdir(parents=True, exist_ok=True)
@@ -77,10 +80,11 @@ def main():
     identity = {
         "version": manifest["version"], "sha256": hashlib.sha256(archive.read_bytes()).hexdigest(),
         "developmentExtensionId": development_id,
-        "storeExtensionId": None, "storeIdentityVerified": False,
+        "storeExtensionId": configured_id, "storeIdentityVerified": True,
+        "verificationScope": "Public key hashes to the assigned store ID; this does not verify an installed native host or player.",
         "previewArchive": preview.name,
         "previewSha256": hashlib.sha256(preview.read_bytes()).hexdigest(),
-        "note": "Draft upload only. Confirm the store ID/public key and coordinate the native host before publication.",
+        "note": "Draft upload only. Native-host/app registration, live Chrome and packaged-player checks remain separate release requirements.",
         "files": records,
     }
     (output / "package-report.json").write_text(json.dumps(identity, indent=2) + "\n", encoding="utf-8")

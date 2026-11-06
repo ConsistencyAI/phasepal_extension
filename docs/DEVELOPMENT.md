@@ -54,7 +54,7 @@ npm run check
 
 Load `dist/` as an unpacked extension from `chrome://extensions` after running
 `npm run build`. Enable Developer mode and select **Load unpacked**. Check that
-the extension ID is `liinajbmlphpehjkmjdffpjhajdpgfpm`; the native-host registration
+the extension ID is `depmepnaojmbbjgogihalfgeajkfkbjj`; the native-host registration
 allows only that ID. The public `key` in the manifest fixes this development ID;
 it is not a private signing key or credential.
 
@@ -92,7 +92,7 @@ powershell -ExecutionPolicy Bypass -File scripts/install-native-host-windows.ps1
 ```
 
 The install scripts register only `app.phasepal.music` for extension ID
-`liinajbmlphpehjkmjdffpjhajdpgfpm`. Uninstall scripts remove only that exact
+`depmepnaojmbbjgogihalfgeajkfkbjj`. Uninstall scripts remove only that exact
 per-user registration. These commands are developer fallback tools, not steps
 for users of an updated packaged app.
 

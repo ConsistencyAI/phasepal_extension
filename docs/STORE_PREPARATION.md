@@ -55,14 +55,37 @@ old `www.phasepal.com/browser-extension` proposal has been replaced by this site
 
 ## Remaining submission requirements
 
-The store upload omits the development key. Record the ID and public key Google
-assigns to the first draft. The current native host allows development ID
-`liinajbmlphpehjkmjdffpjhajdpgfpm`. If the store ID differs, coordinate extension
-configuration, both native-host source copies and Phase Pal registration before
-building the review app. Do not claim an old binary supports a new identity.
+The draft's assigned ID is `depmepnaojmbbjgogihalfgeajkfkbjj`. On November 6,
+its public key was read from the developer dashboard screenshot and verified to
+hash to that exact ID. The development manifest now uses that key. The store ZIP
+still omits the key. Fallback installers, metadata and Phase Pal registration
+must use the same ID. The former development ID was
+`liinajbmlphpehjkmjdffpjhajdpgfpm`; old installed binaries and registrations do
+not become compatible from a documentation update.
 
-Supply a compatible reviewer-accessible Phase Pal build and verify Windows and
-macOS if both are advertised. Finish live Chrome capture, audible playback,
+Identity coordination checks on November 6: 116 extension tests and both
+production builds passed; the packager rejects a key/config mismatch before
+writing a ZIP. The standalone native host passed 13 Rust tests. The Windows
+app's bundled host passed 16 unit tests, one session-lifetime test and five
+package checks, then was rebuilt and staged through its normal producer with
+current provenance. The app registration/lifecycle harness passed 334 checks,
+including migration from an owned old-ID registration to the store ID while
+preserving foreign registrations. The migration test failed before the fix.
+
+The Phase Pal app source and Windows staging changes are local in its separate
+checkout. No Unity player was rebuilt or run, no live Chrome connection was
+verified, and macOS was not rebuilt. The app must be built from these coordinated
+sources before claiming installed-player support for the store ID. The old
+GitHub preview remains a historical artifact; use the identity-aligned preview.
+
+Compared with the first preview's store ZIP, all extension runtime files and
+the store manifest are byte-identical; only NOTICE gained promotional-artwork
+terms. Changing the unpacked development key does not itself require a new
+Chrome Web Store upload.
+
+The maintainer selected Windows for reviewer instructions. Use the normal app
+installation route; a separate reviewer-only installer is not a store requirement.
+Verify the Windows app/host combination, and macOS if advertised. Finish live Chrome capture, audible playback,
 pause/stop/navigation/restart and permission-revocation checks. Local tests do
 not establish browser or packaged-player compatibility.
 
@@ -74,4 +97,5 @@ produces the 440x280 small promo and 1400x560 marquee tile. Neither is runtime
 evidence or a replacement for a real screenshot.
 
 Finally review dashboard data-use definitions, certifications and distribution
-settings. No Chrome Web Store item was created or submitted in this preparation.
+settings. The user has created a draft Chrome Web Store item with version 0.1.0;
+the provided screenshot shows Draft, not a submitted or published item.

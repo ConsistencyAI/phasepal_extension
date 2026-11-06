@@ -43,7 +43,7 @@ npm ci
 npm run check
 ```
 
-Carga el directorio generado `dist/` como una extensión descomprimida. El ID de desarrollo debe ser `liinajbmlphpehjkmjdffpjhajdpgfpm`, correspondiente al host nativo `app.phasepal.music`. La clave pública del manifiesto fija este ID; no es una credencial privada.
+Carga el directorio generado `dist/` como una extensión descomprimida. El ID de desarrollo debe ser `depmepnaojmbbjgogihalfgeajkfkbjj`, correspondiente al host nativo `app.phasepal.music`. La clave pública del manifiesto fija este ID; no es una credencial privada.
 
 Consulta los [comandos de desarrollo y del host nativo](docs/DEVELOPMENT.md), el [diseño V1](docs/DESIGN.md) y la [guía para contribuir](CONTRIBUTING.md). Los usuarios de una aplicación empaquetada compatible no necesitan Rust, Python ni instalar el host manualmente. Para desarrollar el host se necesitan Rust 1.85+, Python 3 y las herramientas de compilación de la plataforma.
 

@@ -30,7 +30,7 @@ manifest = {
     "description": "Phase Pal Dance to Music browser bridge",
     "path": host_path,
     "type": "stdio",
-    "allowed_origins": ["chrome-extension://liinajbmlphpehjkmjdffpjhajdpgfpm/"],
+    "allowed_origins": ["chrome-extension://depmepnaojmbbjgogihalfgeajkfkbjj/"],
 }
 pathlib.Path(manifest_path).write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
 PY
