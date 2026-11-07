@@ -101,12 +101,11 @@ or a packaged player. No CI is configured.
 
 ## Release and support
 
-See [store preparation](docs/STORE_PREPARATION.md) and the
-[submission checklist](store/RELEASE_CHECKLIST.md) for remaining gates.
+Download extension ZIPs and checksums from
+[GitHub Releases](https://github.com/ConsistencyAI/phasepal_extension/releases).
 Keep builds, audio, caches, settings and secrets out of Git.
 
 Contact [hello@consistencyai.net](mailto:hello@consistencyai.net).
-See [security reporting](SECURITY.md), [conduct](CODE_OF_CONDUCT.md), and
-[source release review](docs/PUBLIC_RELEASE_REVIEW.md).
+See [security reporting](SECURITY.md) and [conduct](CODE_OF_CONDUCT.md).
 Source and documents use the [MIT license](LICENSE); dependency licenses apply
 to builds. The bunny artwork has separate terms in [NOTICE](NOTICE).

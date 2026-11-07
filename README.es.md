@@ -56,6 +56,6 @@ El empaquetado requiere Python 3 y guarda ambos ZIP y sus sumas de verificación
 
 ## Publicación y soporte
 
-Consulta la [preparación de la tienda](docs/STORE_PREPARATION.md) y la [lista de envío](store/RELEASE_CHECKLIST.md) para los requisitos pendientes. No añadas a Git compilaciones, audio, cachés, ajustes personales ni secretos.
+Los ZIP de la extensión y sus sumas de verificación están en [GitHub Releases](https://github.com/ConsistencyAI/phasepal_extension/releases). No añadas a Git compilaciones, audio, cachés, ajustes personales ni secretos.
 
-Contacto: [hello@consistencyai.net](mailto:hello@consistencyai.net). Consulta los [avisos de seguridad](SECURITY.md), el [código de conducta](CODE_OF_CONDUCT.md) y la [revisión de publicación del código](docs/PUBLIC_RELEASE_REVIEW.md). El código y los documentos usan la [licencia MIT](LICENSE); también se aplican las licencias de las dependencias a las compilaciones. La imagen del conejo tiene condiciones aparte en [NOTICE](NOTICE).
+Contacto: [hello@consistencyai.net](mailto:hello@consistencyai.net). Consulta los [avisos de seguridad](SECURITY.md) y el [código de conducta](CODE_OF_CONDUCT.md). El código y los documentos usan la [licencia MIT](LICENSE); también se aplican las licencias de las dependencias a las compilaciones. La imagen del conejo tiene condiciones aparte en [NOTICE](NOTICE).

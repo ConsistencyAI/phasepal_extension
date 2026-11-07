@@ -7,10 +7,6 @@ with GitHub Pages' built-in branch publishing. There is no added CI workflow.
 - Privacy: https://consistencyai.github.io/phasepal_extension/privacy/
 - Support: https://consistencyai.github.io/phasepal_extension/#support
 
-The source repository was authorized for public release on November 6, 2026.
-GitHub Free supports Pages for public repositories. The separate documentation
-repository proposal was cancelled; all pages and source stay in this repository.
-
 The publishing source is `main` and `/docs`; `.nojekyll` serves the HTML and CSS
 without a Jekyll theme. The site's pages load no JavaScript, remote fonts, analytics
 or third-party embeds. See `privacy/index.html` for the website hosting disclosure.
@@ -31,5 +27,3 @@ Repository administrators can inspect Pages with:
 gh api repos/ConsistencyAI/phasepal_extension/pages
 gh api repos/ConsistencyAI/phasepal_extension/pages/builds/latest
 ```
-
-The user manages the `main` ruleset. This change does not modify branch protections.

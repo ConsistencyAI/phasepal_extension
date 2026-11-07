@@ -36,9 +36,8 @@ calculates energy, tempo, beat phase, and section intensity locally.
 The bridge never sends song names, artists, URLs, page titles, page content,
 browser history, or captured PCM audio to Phase Pal.
 
-See [privacy and permissions](PRIVACY.md), [security reporting](../SECURITY.md),
-the [source release review](PUBLIC_RELEASE_REVIEW.md), and the
-[current store preparation status](STORE_PREPARATION.md).
+See [privacy and permissions](PRIVACY.md) and
+[security reporting](../SECURITY.md).
 
 ## Extension development
 
@@ -127,8 +126,10 @@ choice that suppresses reminders across sites and restarts. No desktop notificat
 needed. Capture still includes speech and ads from the selected tab.
 
 For a Chrome Web Store draft, run `npm run package:store` with Python 3 available.
-The checked store-upload ZIP, unpacked preview ZIP, checksums, and field drafts are written under
-`BuildArtifacts/chrome-web-store/<version>/`. See [the submission checklist](../store/RELEASE_CHECKLIST.md).
+The checked store-upload ZIP, unpacked preview ZIP, checksums, package report,
+and store icon are written under `BuildArtifacts/chrome-web-store/<version>/`.
+Internal submission worksheets and promotional source assets stay local and
+are not needed to build or package the extension.
 The store upload omits the development public key. Confirm the assigned store ID
 and coordinate it with the native host before building a release app.
 

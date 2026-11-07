@@ -56,6 +56,6 @@ npm run package:store
 
 ## Выпуск и поддержка
 
-Оставшиеся требования перечислены в [подготовке к магазину](docs/STORE_PREPARATION.md) и [списке подачи](store/RELEASE_CHECKLIST.md). Не добавляйте в Git сборки, аудио, кеши, личные настройки и секреты.
+ZIP расширения и контрольные суммы доступны в [GitHub Releases](https://github.com/ConsistencyAI/phasepal_extension/releases). Не добавляйте в Git сборки, аудио, кеши, личные настройки и секреты.
 
-Контакт: [hello@consistencyai.net](mailto:hello@consistencyai.net). См. [сообщения об уязвимостях](SECURITY.md), [кодекс поведения](CODE_OF_CONDUCT.md) и [обзор публикации исходников](docs/PUBLIC_RELEASE_REVIEW.md). Код и документы доступны по [лицензии MIT](LICENSE); к сборкам также применяются лицензии зависимостей. Отдельные условия использования изображения кролика приведены в [NOTICE](NOTICE).
+Контакт: [hello@consistencyai.net](mailto:hello@consistencyai.net). См. [сообщения об уязвимостях](SECURITY.md) и [кодекс поведения](CODE_OF_CONDUCT.md). Код и документы доступны по [лицензии MIT](LICENSE); к сборкам также применяются лицензии зависимостей. Отдельные условия использования изображения кролика приведены в [NOTICE](NOTICE).

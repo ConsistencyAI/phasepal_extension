@@ -56,6 +56,6 @@ npm run package:store
 
 ## リリースとサポート
 
-残りの要件は[ストア公開の準備状況](docs/STORE_PREPARATION.md)と[提出チェックリスト](store/RELEASE_CHECKLIST.md)をご覧ください。ビルド成果物、音声、キャッシュ、個人設定、秘密情報を Git にコミットしないでください。
+拡張機能の ZIP とチェックサムは [GitHub Releases](https://github.com/ConsistencyAI/phasepal_extension/releases) から入手できます。ビルド成果物、音声、キャッシュ、個人設定、秘密情報を Git にコミットしないでください。
 
-連絡先：[hello@consistencyai.net](mailto:hello@consistencyai.net)。[セキュリティ問題の報告](SECURITY.md)、[行動規範](CODE_OF_CONDUCT.md)、[ソース公開レビュー](docs/PUBLIC_RELEASE_REVIEW.md)もご確認ください。ソースコードと文書には [MIT ライセンス](LICENSE) が適用され、ビルド成果物には依存関係のライセンスも適用されます。ウサギのアートワークには [NOTICE](NOTICE) に記載された別の条件が適用されます。
+連絡先：[hello@consistencyai.net](mailto:hello@consistencyai.net)。[セキュリティ問題の報告](SECURITY.md)と[行動規範](CODE_OF_CONDUCT.md)もご確認ください。ソースコードと文書には [MIT ライセンス](LICENSE) が適用され、ビルド成果物には依存関係のライセンスも適用されます。ウサギのアートワークには [NOTICE](NOTICE) に記載された別の条件が適用されます。

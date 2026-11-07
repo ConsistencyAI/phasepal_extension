@@ -8,3 +8,8 @@ native-host/target/
 !.env.example
 *.log
 __pycache__/
+
+# Internal submission worksheets and promotional source assets stay local.
+/store/
+/docs/STORE_PREPARATION.md
+/docs/PUBLIC_RELEASE_REVIEW.md
