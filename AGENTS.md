@@ -17,9 +17,11 @@
 - `config/extension-id.json`: coordinated extension and native-host identity.
 - `native-host/`: Rust native messaging host; a separate copy is bundled by Phase
   Pal from `Tools/phase-browser-music` in its application repository.
-- `store/`: listing, permissions, reviewer instructions, and packaging checklist.
+- `store/`: ignored local-only submission material and promotional source assets;
+  do not commit these files or add public links to them.
 - `docs/PRIVACY.md`: extension data boundary; update it for data-use changes.
-- `docs/STORE_PREPARATION.md`: dated candidate and remaining submission requirements.
+- `BuildArtifacts/private-submission-notes/`: local-only preparation records.
+  Keep dated submission and release-review worksheets out of the public docs.
 
 ## Checks and packaging
 

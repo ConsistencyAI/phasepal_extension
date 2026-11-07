@@ -91,8 +91,6 @@ def main():
     (output / "SHA256SUMS.txt").write_text(
         identity["sha256"] + "  " + archive.name + "\n" +
         identity["previewSha256"] + "  " + preview.name + "\n", encoding="utf-8")
-    for name in ("LISTING.md", "PRIVACY_FIELDS.md", "REVIEWER_INSTRUCTIONS.md", "RELEASE_CHECKLIST.md"):
-        shutil.copy2(ROOT / "store" / name, output / name)
     shutil.copy2(DIST / "icons/icon-128.png", output / "store-icon-128.png")
     print("Prepared Chrome Web Store draft package:", archive)
     print("SHA-256:", identity["sha256"])

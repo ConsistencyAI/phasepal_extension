@@ -57,6 +57,6 @@ npm run package:store
 
 ## 发布与支持
 
-剩余要求见[商店准备状态](docs/STORE_PREPARATION.md)和[提交清单](store/RELEASE_CHECKLIST.md)。不要将构建产物、音频、缓存、个人设置或密钥提交到 Git。
+扩展 ZIP 和校验信息可在 [GitHub Releases](https://github.com/ConsistencyAI/phasepal_extension/releases) 获取。不要将构建产物、音频、缓存、个人设置或密钥提交到 Git。
 
-联系：[hello@consistencyai.net](mailto:hello@consistencyai.net)。另见[安全问题报告](SECURITY.md)、[行为准则](CODE_OF_CONDUCT.md)和[源码发布审查](docs/PUBLIC_RELEASE_REVIEW.md)。源码及文档采用 [MIT 许可证](LICENSE)，构建产物还须遵守依赖项许可证。兔子图标另有条款，详见 [NOTICE](NOTICE)。
+联系：[hello@consistencyai.net](mailto:hello@consistencyai.net)。另见[安全问题报告](SECURITY.md)和[行为准则](CODE_OF_CONDUCT.md)。源码及文档采用 [MIT 许可证](LICENSE)，构建产物还须遵守依赖项许可证。兔子图标另有条款，详见 [NOTICE](NOTICE)。
