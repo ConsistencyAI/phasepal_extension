@@ -4,7 +4,7 @@
 
 ブラウザーの再生状態を Phase Pal の **Dance to Music** 機能に連携する拡張機能です。任意で有効にできるビート解析は、お使いのデバイス上で行われます。Consistency AI が管理しています。
 
-**プレビュー版：** ソースコードは MIT ライセンスで公開されています。ウサギのアートワークには別の利用条件が適用されます。これは Chrome ウェブストアの正式リリースでも、署名済みの Phase Pal インストーラーでもありません。ブラウザー連携用ブリッジを同梱した互換性のあるデスクトップアプリが別途必要です。このリポジトリには含まれていません。実際の Chrome での再生と、パッケージ化されたアプリでの動作確認は未完了です。
+[Chrome ウェブストアから Phase Pal Music Bridge をインストール](https://chromewebstore.google.com/detail/phase-pal-music-bridge/depmepnaojmbbjgogihalfgeajkfkbjj)できます。ブラウザー連携用ブリッジを同梱した互換性のある Phase Pal デスクトップアプリが必要です。
 
 ## セットアップとプライバシー
 
@@ -22,7 +22,7 @@ Spotify Web、YouTube Music、SoundCloud、Apple Music、Amazon Music の地域�
 ## 拡張機能の使い方
 
 1. Windows または macOS で Chrome 116 以降を使用し、ブラウザー用ブリッジを同梱・登録する互換性のある Phase Pal ビルドを用意してください。現在のインストール手順は Linux や他のブラウザーには対応していません。拡張機能の更新だけでは、古いアプリにブリッジは追加されません。
-2. この開発者向けプレビューでは、[Releases](https://github.com/ConsistencyAI/phasepal_extension/releases) から `phasepal-music-bridge-preview-0.1.0.zip` をダウンロードして展開します。`chrome://extensions` で **Developer mode（デベロッパーモード）** を有効にし、**Load unpacked（パッケージ化されていない拡張機能を読み込む）** を選択して、`manifest.json` を含むフォルダーを指定します。別途用意されているストア用 ZIP は開発者ダッシュボードへのアップロード専用で、開発用の公開鍵を含みません。
+2. [Chrome ウェブストアの掲載ページ](https://chromewebstore.google.com/detail/phase-pal-music-bridge/depmepnaojmbbjgogihalfgeajkfkbjj)を開き、**Chrome に追加**を選択します。
 3. Phase Pal を開いて **Dance to Music** を有効にします。対応サイトまたは許可済みのカスタムサイトで再生を開始し、拡張機能のポップアップを開いて接続状態を確認します。
 4. **Enable Beat Sync（ビート同期を有効化）** を選択すると、そのタブの音声をローカルで解析します。Chrome にキャプチャ中の表示が出ますが、タブの音声は引き続き聞こえます。**Stop Beat Sync（ビート同期を停止）** で終了します。
 

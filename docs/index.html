@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Set up Phase Pal Music Bridge</title>
-  <meta name="description" content="Set up the Phase Pal Music Bridge developer preview, connect the desktop app, and control local tab audio analysis.">
+  <meta name="description" content="Set up the Phase Pal Music Bridge, connect the desktop app, and control local tab audio analysis.">
   <link rel="stylesheet" href="assets/style.css">
 </head>
 <body>
@@ -15,10 +15,10 @@
 </nav></header>
 <main id="main" class="wrap">
   <section class="hero" aria-labelledby="title">
-    <div><p class="eyebrow">Dance to Music · Developer preview</p>
+    <div><p class="eyebrow">Dance to Music</p>
       <h1 id="title">Bring browser music<br>to your Pal.</h1>
       <p class="lead">Connect playback to Phase Pal, then choose when to analyze a tab's rhythm. Beat analysis runs on your device.</p>
-      <a class="button" href="#setup">Set up the preview</a>
+      <a class="button" href="https://chromewebstore.google.com/detail/phase-pal-music-bridge/depmepnaojmbbjgogihalfgeajkfkbjj">Add to Chrome</a>
     </div>
     <aside class="flow" aria-label="How the bridge works">
       <ol><li>Your music tab</li><li>Local playback and optional beat analysis</li><li>Your Phase Pal desktop app</li></ol>
@@ -26,13 +26,13 @@
     </aside>
   </section>
   <div class="content">
-    <aside class="notice"><strong>This is a developer preview.</strong> The extension is not yet on the Chrome Web Store. You need a compatible Phase Pal build with the browser bridge bundled and registered. This repository does not provide a desktop installer. Live browser and packaged-app verification are still pending.</aside>
+    <aside class="notice">Use a compatible Phase Pal desktop build with the browser bridge bundled and registered.</aside>
     <section id="setup" aria-labelledby="setup-title">
-      <h2 id="setup-title">Set up the preview</h2>
+      <h2 id="setup-title">Set up Music Bridge</h2>
       <p>Use Google Chrome 116 or newer on Windows or macOS. The current install workflow does not support Linux or other browsers.</p>
       <ol class="steps">
         <li><h3>Check your Phase Pal build</h3><p>Open a compatible desktop build that includes the music bridge, and turn on <strong>Dance to Music</strong>. The app registers its own bridge with Chrome. An older app does not gain this integration just by updating the extension. Ordinary users of a compatible packaged app do not need Rust, Python, or manual host commands.</p></li>
-        <li><h3>Load the preview extension</h3><p>Download <code>phasepal-music-bridge-preview-0.1.0.zip</code> from <a href="https://github.com/ConsistencyAI/phasepal_extension/releases">GitHub Releases</a> and extract it. Open <code>chrome://extensions</code>, enable <strong>Developer mode</strong>, select <strong>Load unpacked</strong>, and select the extracted folder containing <code>manifest.json</code>. The separate store-upload ZIP is for the developer dashboard.</p></li>
+        <li><h3>Install the extension</h3><p>Open the <a href="https://chromewebstore.google.com/detail/phase-pal-music-bridge/depmepnaojmbbjgogihalfgeajkfkbjj">Chrome Web Store listing</a> and select <strong>Add to Chrome</strong>.</p></li>
         <li><h3>Play something in Chrome</h3><p>Start playback on a supported music website. Open Chrome's Extensions menu and select <strong>Phase Pal Music Bridge</strong>. Pin it if you want quick access. Check the popup's actual connection status.</p></li>
         <li><h3>Choose Beat Sync</h3><p>Select <strong>Enable Beat Sync</strong> to analyze the active supported tab. Chrome shows a capture indicator and the tab remains audible. Select <strong>Stop Beat Sync</strong> to end capture. Estimates depend on the audio; a detected player does not prove the sound is music.</p></li>
       </ol>

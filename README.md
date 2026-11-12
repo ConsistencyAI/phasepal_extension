@@ -5,10 +5,7 @@
 Connect browser playback to **Dance to Music** in Phase Pal, with optional beat
 analysis performed on your device. Maintained by Consistency AI.
 
-**Preview:** the source is open under MIT; the bunny artwork has separate terms.
-This is not a Chrome Web Store release or a signed Phase Pal installer. A
-compatible desktop app with the bundled browser bridge is required and is not
-included here. Live Chrome playback and packaged-player checks remain open.
+Install [Phase Pal Music Bridge from the Chrome Web Store](https://chromewebstore.google.com/detail/phase-pal-music-bridge/depmepnaojmbbjgogihalfgeajkfkbjj). A compatible Phase Pal desktop build with the browser bridge is required.
 
 ## Setup and privacy
 
@@ -37,11 +34,7 @@ need live playback checks before a runtime release.
    that bundles and registers the browser bridge. Linux and other browsers are
    outside the current install workflow. Older apps do not gain the bridge from
    an extension update alone.
-2. For this developer preview, download `phasepal-music-bridge-preview-0.1.0.zip`
-   from [Releases](https://github.com/ConsistencyAI/phasepal_extension/releases),
-   extract it, and choose **Load unpacked** in Developer mode at
-   `chrome://extensions`. Select the folder containing `manifest.json`.
-   The separate store ZIP is for dashboard upload and omits the development key.
+2. Open the [Chrome Web Store listing](https://chromewebstore.google.com/detail/phase-pal-music-bridge/depmepnaojmbbjgogihalfgeajkfkbjj) and select **Add to Chrome**.
 3. Open Phase Pal and turn on **Dance to Music**. Start playback on a supported
    or approved custom site, then open the extension popup to check the connection.
 4. Select **Enable Beat Sync** to analyze that tab's audio locally. Chrome shows
