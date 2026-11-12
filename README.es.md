@@ -4,7 +4,7 @@
 
 Conecta la reproducción del navegador con **Dance to Music** de Phase Pal, con análisis opcional del ritmo en tu dispositivo. Mantenido por Consistency AI.
 
-**Versión preliminar:** el código es abierto bajo MIT; la imagen del conejo tiene condiciones aparte. No es una publicación en Chrome Web Store ni un instalador firmado de Phase Pal. Necesitas una aplicación de escritorio compatible con el puente del navegador incluido; esa aplicación no se incluye aquí. Quedan pendientes las pruebas de reproducción real en Chrome y de la aplicación empaquetada.
+Instala [Phase Pal Music Bridge desde Chrome Web Store](https://chromewebstore.google.com/detail/phase-pal-music-bridge/depmepnaojmbbjgogihalfgeajkfkbjj). Necesitas una versión compatible de Phase Pal para escritorio con el puente del navegador incluido.
 
 ## Configuración y privacidad
 
@@ -22,7 +22,7 @@ La reproducción en un sitio compatible se trata como música. La voz, los pódc
 ## Usar la extensión
 
 1. Usa Chrome 116 o posterior en Windows o macOS y una versión compatible de Phase Pal que incluya y registre el puente del navegador. El proceso actual de instalación no admite Linux ni otros navegadores. Actualizar la extensión no añade el puente a aplicaciones antiguas.
-2. Para esta versión preliminar de desarrollo, descarga `phasepal-music-bridge-preview-0.1.0.zip` de [Releases](https://github.com/ConsistencyAI/phasepal_extension/releases) y descomprímelo. Activa **Developer mode** en `chrome://extensions`, elige **Load unpacked** y selecciona la carpeta que contiene `manifest.json`. El ZIP separado para la tienda se destina al panel de desarrolladores y omite la clave pública de desarrollo.
+2. Abre la [ficha en Chrome Web Store](https://chromewebstore.google.com/detail/phase-pal-music-bridge/depmepnaojmbbjgogihalfgeajkfkbjj) y selecciona **Añadir a Chrome**.
 3. Abre Phase Pal y activa **Dance to Music**. Inicia la reproducción en un sitio compatible o personalizado autorizado y abre la ventana de la extensión para comprobar la conexión.
 4. Selecciona **Enable Beat Sync** para analizar localmente el audio de esa pestaña. Chrome muestra el indicador de captura y la pestaña sigue sonando. Selecciona **Stop Beat Sync** para detenerla.
 

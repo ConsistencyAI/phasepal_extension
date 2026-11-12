@@ -4,7 +4,7 @@
 
 将浏览器播放状态连接到 Phase Pal 的 **Dance to Music（随音乐舞动）** 功能；可选的节拍分析在你的设备上完成。由 Consistency AI 维护。
 
-**预览版：** 源码采用 MIT 许可证，兔子图标另有使用条款。这不是 Chrome 应用商店正式版，也不包含已签名的 Phase Pal 安装程序。你需要另行获取已内置浏览器桥接组件的兼容桌面应用。真实 Chrome 播放和打包应用的验证仍未完成。
+从 [Chrome 应用商店安装 Phase Pal Music Bridge](https://chromewebstore.google.com/detail/phase-pal-music-bridge/depmepnaojmbbjgogihalfgeajkfkbjj)。需要已内置浏览器桥接组件的兼容 Phase Pal 桌面应用。
 
 ## 设置与隐私
 
@@ -23,7 +23,7 @@
 ## 使用扩展
 
 1. 在 Windows 或 macOS 上使用 Chrome 116 或更新版本，并使用已打包并注册浏览器桥接组件的兼容 Phase Pal 应用。目前的安装流程不支持 Linux 或其他浏览器。只更新扩展不会为旧版应用添加桥接组件。
-2. 对于此开发者预览版，请从 [Releases](https://github.com/ConsistencyAI/phasepal_extension/releases) 下载 `phasepal-music-bridge-preview-0.1.0.zip` 并解压。在 `chrome://extensions` 中开启 **Developer mode（开发者模式）**，选择 **Load unpacked（加载已解压的扩展程序）**，然后选择包含 `manifest.json` 的文件夹。另一个商店上传 ZIP 用于开发者控制台，不包含开发公钥。
+2. 打开 [Chrome 应用商店页面](https://chromewebstore.google.com/detail/phase-pal-music-bridge/depmepnaojmbbjgogihalfgeajkfkbjj)，选择 **添加至 Chrome**。
 3. 打开 Phase Pal，启用 **Dance to Music**。在支持或已批准的自定义网站上开始播放，然后打开扩展弹窗检查连接状态。
 4. 选择 **Enable Beat Sync（启用节拍同步）**，在本地分析当前标签页音频。Chrome 会显示捕获指示，标签页仍可正常发声。选择 **Stop Beat Sync（停止节拍同步）** 结束捕获。
 
